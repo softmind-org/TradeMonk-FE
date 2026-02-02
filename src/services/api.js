@@ -1,65 +1,66 @@
-/**
- * API Service Configuration
- * Base configuration for API calls
- */
+import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-
-/**
- * Base fetch wrapper with common configurations
- */
-const apiClient = async (endpoint, options = {}) => {
-    const url = `${API_BASE_URL}${endpoint}`
-
-    const defaultHeaders = {
+// Create axios instance with default config
+const api = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+    headers: {
         'Content-Type': 'application/json',
-    }
+    },
+    timeout: 10000, // 10 seconds
+});
 
-    // Add auth token if available
-    const token = localStorage.getItem('authToken')
-    if (token) {
-        defaultHeaders['Authorization'] = `Bearer ${token}`
-    }
-
-    const config = {
-        ...options,
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
-    }
-
-    try {
-        const response = await fetch(url, config)
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+// Request interceptor - Add auth token to requests
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
-
-        return await response.json()
-    } catch (error) {
-        console.error('API Error:', error)
-        throw error
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-}
+);
 
-// HTTP method helpers
-export const api = {
-    get: (endpoint, options = {}) =>
-        apiClient(endpoint, { ...options, method: 'GET' }),
+// Response interceptor - Handle errors globally
+api.interceptors.response.use(
+    (response) => {
+        return response.data; // Return only the data portion
+    },
+    (error) => {
+        // Handle different error scenarios
+        if (error.response) {
+            // Server responded with error status
+            const { status, data } = error.response;
 
-    post: (endpoint, data, options = {}) =>
-        apiClient(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }),
+            if (status === 401) {
+                // Unauthorized - clear token and redirect to login
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
 
-    put: (endpoint, data, options = {}) =>
-        apiClient(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
+            // Return a formatted error object
+            return Promise.reject({
+                message: data.message || 'An error occurred',
+                status,
+                data,
+            });
+        } else if (error.request) {
+            // Request made but no response received
+            return Promise.reject({
+                message: 'Network error. Please check your connection.',
+                status: 0,
+            });
+        } else {
+            // Something else happened
+            return Promise.reject({
+                message: error.message || 'An unexpected error occurred',
+                status: 0,
+            });
+        }
+    }
+);
 
-    patch: (endpoint, data, options = {}) =>
-        apiClient(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
-
-    delete: (endpoint, options = {}) =>
-        apiClient(endpoint, { ...options, method: 'DELETE' }),
-}
-
-export default api
+export default api;

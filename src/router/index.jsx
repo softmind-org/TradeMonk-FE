@@ -3,7 +3,16 @@
  * Defines all application routes
  */
 import { createBrowserRouter } from 'react-router-dom'
-import { HomePage, AboutPage, NotFoundPage } from '@pages'
+import { 
+  HomePage, 
+  AboutPage, 
+  NotFoundPage,
+  Login,
+  Register,
+  ForgotPassword,
+  ProductDetail,
+  Marketplace
+} from '@pages'
 
 export const router = createBrowserRouter([
   {
@@ -14,19 +23,26 @@ export const router = createBrowserRouter([
     path: '/about',
     element: <AboutPage />,
   },
-  // Add more routes here
-  // {
-  //   path: '/services',
-  //   element: <ServicesPage />,
-  // },
-  // {
-  //   path: '/contact',
-  //   element: <ContactPage />,
-  // },
-  // {
-  //   path: '/login',
-  //   element: <LoginPage />,
-  // },
+  {
+    path: '/marketplace',
+    element: <Marketplace />,
+  },
+  {
+    path: '/product/:id',
+    element: <ProductDetail />,
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />,
+  },
   {
     path: '*',
     element: <NotFoundPage />,
