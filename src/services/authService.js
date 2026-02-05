@@ -18,7 +18,7 @@ export const authService = {
             const { accessToken, ...user } = response.data;
 
             // Store token and user data
-            localStorage.setItem('authToken', accessToken);
+            localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('user', JSON.stringify(user));
         }
 
@@ -39,9 +39,12 @@ export const authService = {
      * @returns {Promise<void>}
      */
     logout: async () => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-        return api.post('/auth/logout', {});
+        try {
+            await api.post('/auth/logout', {});
+        } finally {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+        }
     },
 
     /**

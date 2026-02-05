@@ -2,6 +2,8 @@
  * Hero Section Component
  * Displays the main hero banner with stats
  */
+import { ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { heroBg, pokemonLogo, yugiohLogo, magicLogo } from '@assets'
 
 const HeroSection = ({ stats }) => {
@@ -80,10 +82,10 @@ const HeroSection = ({ stats }) => {
         {/* Ecosystem Cards */}
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
           {ecosystems.map((ecosystem) => (
-            <a
-              key={ecosystem.name}
-              href={`/${ecosystem.name.toLowerCase().replace(/[:\s]/g, '-')}`}
-              className="bg-card border border-border rounded-xl px-6 py-4 flex items-center gap-3 hover:border-secondary transition-colors min-w-40"
+            <Link 
+            key={ecosystem.name}
+            to={`/${ecosystem.name.toLowerCase().replace(/[:\s]/g, '-')}`}
+            className="bg-card border border-border rounded-xl px-6 py-4 flex items-center gap-3 hover:border-secondary transition-colors min-w-40"
             >
               <img 
                 src={ecosystem.icon} 
@@ -91,7 +93,7 @@ const HeroSection = ({ stats }) => {
                 className="w-6 h-6 object-contain"
               />
               <span className="text-foreground text-sm font-medium">{ecosystem.name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

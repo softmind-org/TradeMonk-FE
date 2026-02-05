@@ -2,25 +2,21 @@
  * Marketplace Page
  * Features sidebar filters, sorting, and product grid
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '@layouts'
 import { Button, ProductCard, Input } from '@components/ui'
 import { useAuth } from '@context'
-import { 
-  charizard, 
-  blueEyes, 
-  blackLotus, 
-  darkMagicianGirl,
-  gengar,
-  umbreon,
-  exodia,
-  pokemonLogo 
-} from '@assets'
+import { useMarketplaceProducts } from '@/hooks/useMarketplaceProducts'
+import { useFavorites } from '@/hooks/useFavorite'
+import { useQueryClient } from '@tanstack/react-query'
+import productService from '@/services/productService'
+import { pokemonLogo } from '@assets'
 
 const Marketplace = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const queryClient = useQueryClient()
   
   // -- State --
   const [filters, setFilters] = useState({
@@ -33,170 +29,86 @@ const Marketplace = () => {
   const [sortBy, setSortBy] = useState('newest') // 'newest', 'price-low', 'price-high'
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
-  // -- Mock Data --
-  // Using the same data as LatestArrivals + some extras for testing
-  const initialCards = [
-    {
-      id: 1,
-      image: charizard,
-      backImage: pokemonLogo,
-      name: 'Charizard VMAX',
-      price: 185.50,
-      condition: 'MINT',
-      edition: 'SHINING FATES',
-      badge: 'POWER SELLER',
-      topBadge: 'SECRET RARE',
-      rating: 4.9,
-      game: 'Pokémon',
-      dateAdded: '2024-01-15'
-    },
-    {
-      id: 2,
-      image: blueEyes,
-      backImage: pokemonLogo,
-      name: 'Blue-Eyes White Dragon',
-      price: 4500.00,
-      condition: 'NM',
-      edition: 'LEGEND OF BLUE...',
-      badge: 'FAST SHIPPING',
-      topBadge: 'ULTRA RARE',
-      rating: 4.9,
-      game: 'Yu-Gi-Oh',
-      dateAdded: '2024-01-14'
-    },
-    {
-      id: 3,
-      image: blackLotus,
-      backImage: pokemonLogo,
-      name: 'Black Lotus',
-      price: 250000.00,
-      condition: 'NM',
-      edition: 'LIMITED EDITION...',
-      badge: 'TOP RATED',
-      topBadge: 'RARE',
-      rating: 4.9,
-      game: 'Magic: The Gathering',
-      dateAdded: '2024-01-10'
-    },
-    {
-      id: 4,
-      image: umbreon,
-      backImage: pokemonLogo,
-      name: 'Umbreon VMAX',
-      price: 620.00,
-      condition: 'MINT',
-      edition: 'EVOLVING SKIES',
-      badge: 'FAST SHIPPING',
-      topBadge: 'SECRET RARE',
-      rating: 4.9,
-      game: 'Pokémon',
-      dateAdded: '2024-01-12'
-    },
-    {
-      id: 5,
-      image: darkMagicianGirl,
-      backImage: pokemonLogo,
-      name: 'Dark Magician Girl',
-      price: 320.00,
-      condition: 'LP',
-      edition: "MAGICIAN'S FOR...",
-      badge: 'POWER SELLER',
-      topBadge: 'SECRET RARE',
-      rating: 4.9,
-      game: 'Yu-Gi-Oh',
-      dateAdded: '2024-01-13'
-    },
-    {
-      id: 6,
-      image: blackLotus,
-      backImage: pokemonLogo,
-      name: 'Mox Diamond',
-      price: 780.00,
-      condition: 'NM',
-      edition: 'STRONGHOLD',
-      badge: 'TOP RATED',
-      topBadge: 'RARE',
-      rating: 4.9,
-      game: 'Magic: The Gathering',
-      dateAdded: '2024-01-11'
-    },
-    {
-      id: 7,
-      image: gengar,
-      backImage: pokemonLogo,
-      name: 'Gengar VMAX',
-      price: 245.00,
-      condition: 'MINT',
-      edition: 'FUSION STRIKE',
-      badge: 'FAST SHIPPING',
-      topBadge: 'SECRET RARE',
-      rating: 4.9,
-      game: 'Pokémon',
-      dateAdded: '2024-01-09'
-    },
-    {
-      id: 8,
-      image: exodia,
-      backImage: pokemonLogo,
-      name: 'Exodia the Forbidden One',
-      price: 1500.00,
-      condition: 'NM',
-      edition: 'LEGEND OF BLUE...',
-      badge: 'POWER SELLER',
-      topBadge: 'ULTRA RARE',
-      rating: 4.9,
-      game: 'Yu-Gi-Oh',
-      dateAdded: '2024-01-08'
-    },
-  ]
+  // -- API Integration --
+  const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy)
+  const products = data?.products || []
+  
+  // Get product IDs for favorites
+  const productIds = products.map(p => p._id)
+  const { favorites, toggleFavorite } = useFavorites(productIds)
 
-  // -- Filtering & Sorting Logic --
-  const filteredCards = useMemo(() => {
-    let result = [...initialCards]
-
-    // Filter by Game
-    if (filters.gameSystem !== 'All') {
-      result = result.filter(card => card.game === filters.gameSystem)
+  // Prefetch favorite status for all products when loaded
+  useEffect(() => {
+    if (isAuthenticated && products.length) {
+      products.forEach(product => {
+        queryClient.prefetchQuery({
+          queryKey: ['favorite', product._id],
+          queryFn: async () => {
+            const response = await productService.checkFavorite(product._id)
+            return response.isFavorited || false
+          },
+          staleTime: 5 * 60 * 1000,
+        })
+      })
     }
+  }, [isAuthenticated, products, queryClient])
 
-    // Filter by Condition
-    if (filters.condition !== 'ALL') {
-      result = result.filter(card => card.condition === filters.condition)
+  const handleFavoriteClick = (id) => {
+    toggleFavorite(id)
+  }
+
+  /**
+   * Helper to format image URLs
+   * Prepends the backend server origin to the stored relative path
+   */
+  const formatImageUrl = (path) => {
+    if (!path || path === '') return pokemonLogo;
+    
+    // If it's already a full URL, return it
+    if (path.startsWith('http')) return path;
+    
+    // Get server API URL from env
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
+    let serverBase = '';
+    
+    try {
+      // Extract origin (e.g., http://localhost:5000)
+      serverBase = new URL(apiBase).origin;
+    } catch (e) {
+      serverBase = apiBase.split('/api')[0];
     }
+    // Backend already stores path as '/public/uploads/products/filename.jpg'
+    // So we just need to join it with serverBase
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    
+    return `${serverBase}${cleanPath}`;
+  }
 
-    // Filter by Price
-    if (filters.priceMin !== '') {
-      result = result.filter(card => card.price >= Number(filters.priceMin))
-    }
-    if (filters.priceMax !== '') {
-      result = result.filter(card => card.price <= Number(filters.priceMax))
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price
-        case 'price-high':
-          return b.price - a.price
-        case 'newest':
-        default:
-          return new Date(b.dateAdded) - new Date(a.dateAdded) // Descending date
-      }
-    })
-
-    return result
-  }, [filters, sortBy])
+  // Map API data to ProductCard props
+  const cards = products.map(product => ({
+    id: product._id,
+    image: formatImageUrl(product.images?.[0]),
+    backImage: formatImageUrl(product.backImage),
+    name: product.title,
+    price: product.price,
+    condition: product.condition,
+    edition: product.collectionName,
+    badge: product.badges?.[0],
+    topBadge: product.rarity,
+    rating: product.rating || 0,
+    isFavorite: !!favorites[product._id]
+  }))
 
   // Console log data as requested
   useEffect(() => {
     console.log('🛒 Marketplace State Update:', {
       filters,
       sortBy,
-      resultsCount: filteredCards.length,
-      data: filteredCards
+      resultsCount: cards.length,
+      isLoading,
+      data: cards
     })
-  }, [filters, sortBy, filteredCards])
+  }, [filters, sortBy, cards, isLoading])
 
 
   // -- Handlers --
@@ -236,6 +148,15 @@ const Marketplace = () => {
       </div>
     )
   }
+
+  // Loading Skeleton
+  const LoadingSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="aspect-[3/4] bg-gray-700/20 rounded-xl animate-pulse"></div>
+      ))}
+    </div>
+  )
 
   return (
     <MainLayout>
@@ -323,7 +244,7 @@ const Marketplace = () => {
                  <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Marketplace</h1>
                     <p className="text-muted-foreground text-xs uppercase tracking-widest font-bold">
-                       {filteredCards.length} Verified Listings Available
+                       {isLoading ? 'Loading...' : `${data?.total || cards.length} Verified Listings Available`}
                     </p>
                  </div>
                  
@@ -348,14 +269,16 @@ const Marketplace = () => {
               </div>
 
               {/* Grid */}
-              {filteredCards.length > 0 ? (
+              {isLoading ? (
+                <LoadingSkeleton />
+              ) : cards.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredCards.map(card => (
+                  {cards.map(card => (
                     <ProductCard
                       key={card.id}
                       {...card}
                       isLoggedIn={isAuthenticated}
-                      // Using local state for favorites not strictly required for this demo but good for UI
+                      onFavoriteClick={() => handleFavoriteClick(card.id)}
                       onCardClick={handleCardClick}
                     />
                   ))}

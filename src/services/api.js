@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor - Add auth token to requests
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('accessToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -35,10 +35,11 @@ api.interceptors.response.use(
             const { status, data } = error.response;
 
             if (status === 401) {
-                // Unauthorized - clear token and redirect to login
-                localStorage.removeItem('authToken');
+                // Unauthorized - clear token
+                localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                window.location.href = '/login';
+                // Don't redirect globally - let the specific hook/component handle it
+                // or the user can stay on the current page as a guest
             }
 
             // Return a formatted error object

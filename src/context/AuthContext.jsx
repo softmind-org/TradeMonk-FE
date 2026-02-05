@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user')
-        const token = localStorage.getItem('authToken')
+        const token = localStorage.getItem('accessToken')
         
         if (storedUser && token) {
           setUser(JSON.parse(storedUser))
@@ -35,14 +35,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData, token) => {
     localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('authToken', token)
+    localStorage.setItem('accessToken', token)
     setUser(userData)
     setIsAuthenticated(true)
   }
 
   const logout = () => {
     localStorage.removeItem('user')
-    localStorage.removeItem('authToken')
+    localStorage.removeItem('accessToken')
     setUser(null)
     setIsAuthenticated(false)
   }

@@ -3,3 +3,4 @@ export { default as Input, InputPassword } from './Input' // Export InputPasswor
 export { default as Card, CardContent } from './Card'
 export { default as Spinner } from './Spinner'
 export { default as ProductCard } from './ProductCard'
+export { default as MarketHistoryChart } from './MarketHistoryChart'
