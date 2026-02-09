@@ -6,9 +6,10 @@ import { useEffect } from 'react'
 import { useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { MainLayout } from '@layouts'
 import { Button } from '@components/ui'
-import { useCart } from '@context'
 import { Check, Download, ArrowRight } from 'lucide-react'
 import { jsPDF } from 'jspdf'
+
+import { useCart } from '@context'
 
 const OrderComplete = () => {
   const { state } = useLocation()
@@ -18,21 +19,7 @@ const OrderComplete = () => {
 
   useEffect(() => {
     if (order) {
-      // Persist order to localStorage for Order History
-      const existingOrders = JSON.parse(localStorage.getItem('tradeMonk_orders') || '[]')
-      
-      // Prevent duplicate saves on refresh
-      if (!existingOrders.find(o => o.id === order.id)) {
-        const newOrder = {
-          ...order,
-          status: 'Processing',
-          progress: 35, // Grading stage
-          items: order.items || [] 
-        }
-        localStorage.setItem('tradeMonk_orders', JSON.stringify([newOrder, ...existingOrders]))
-      }
-      
-      clearCart()
+        clearCart()
     }
   }, [order, clearCart])
 

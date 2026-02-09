@@ -1,83 +1,90 @@
-/**
- * Checkout Content Component
- * Contains the main layout and logic, wrapped in Stripe Elements context
- */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useFormik } from 'formik'
-import * as Yup from 'yup'
 import {
   PaymentElement,
   useStripe,
   useElements
 } from '@stripe/react-stripe-js'
-import { useCart } from '@context'
+import { useCart, useAuth } from '@context'
 import { Button, Input } from '@components/ui'
 import { ArrowLeft, Truck, ArrowRight, Lock } from 'lucide-react'
 import { pokemonLogo } from '@assets'
-
-const validationSchema = Yup.object({
-  fullName: Yup.string().required('Full name is required').min(2, 'Name too short'),
-  address: Yup.string().required('Address is required').min(5, 'Address too short'),
-  city: Yup.string().required('City is required'),
-  zipCode: Yup.string().required('Zip code is required').matches(/^\d+$/, 'Must be digits').min(4, 'Zip code too short')
-})
+import { useFormik } from 'formik'
+import { checkoutSchema } from '@/schemas/checkout-schema'
 
 const CheckoutContent = () => {
   const navigate = useNavigate()
   const stripe = useStripe()
   const elements = useElements()
-  const { items, subtotal, shipping, total } = useCart()
+  const { items, subtotal, shipping, total, clearCart } = useCart()
+  const { user } = useAuth()
   
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
-  
+
   const formik = useFormik({
     initialValues: {
-      fullName: '',
+      fullName: user?.name || '',
+      email: user?.email || '',
       address: '',
       city: '',
       zipCode: ''
     },
-    validationSchema,
+    validationSchema: checkoutSchema,
     onSubmit: async (values) => {
-      if (!stripe || !elements) return
-
-      setIsProcessing(true)
-      setErrorMessage(null)
-
-      // Trigger form validation
-      const { error: submitError } = await elements.submit()
-      
-      if (submitError) {
-        setErrorMessage(submitError.message)
+        console.log('Submitting form with values:', values)
+        if (!stripe || !elements) {
+            console.error('Stripe or Elements not loaded')
+            return
+        }
+    
+        setIsProcessing(true)
+        setErrorMessage(null)
+    
+        // Trigger form validation for Stripe Element
+        const { error: submitError } = await elements.submit()
+        
+        if (submitError) {
+          console.error('Stripe Element Error:', submitError)
+          setErrorMessage(submitError.message)
+          setIsProcessing(false)
+          return
+        }
+    
+        // Simulate payment processing delay (replace with actual backend call)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+    
+        const orderId = `TM-${Math.floor(100000 + Math.random() * 900000)}`
+        const orderDate = new Date().toLocaleDateString('en-US')
+        
+        const orderData = {
+          id: orderId,
+          date: orderDate,
+          total: total.toFixed(2),
+          status: 'Paid',
+          progress: 25,
+          items: items
+        }
+        
+        const existingOrders = JSON.parse(localStorage.getItem('tradeMonk_orders') || '[]')
+        localStorage.setItem('tradeMonk_orders', JSON.stringify([orderData, ...existingOrders]))
+    
+        console.log('Payment Processed Successfully', { shippingInfo: values, items, total, orderId })
+        // derived state from cart is passed to orderData, so we can clear cart in next screen
+        
+        navigate('/order-complete', { 
+          state: { 
+            order: orderData
+          } 
+        })
         setIsProcessing(false)
-        return
-      }
-
-      // Simulate payment processing delay
-      // In a real app, you would confirm the paymentIntent here
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      const orderId = `TM-${Math.floor(100000 + Math.random() * 900000)}`
-      const orderDate = new Date().toLocaleDateString('en-US')
-
-      console.log('Payment Processed', { shippingInfo: values, items, total, orderId })
-      // Do not clear cart here to avoid triggering parent redirect
-      
-      navigate('/order-complete', { 
-        state: { 
-          order: {
-            id: orderId,
-            date: orderDate,
-            total: total.toFixed(2),
-            items: items 
-          }
-        } 
-      })
-      setIsProcessing(false)
     }
   })
+
+  // Debug: Log validation errors
+  if (Object.keys(formik.errors).length > 0 && formik.submitCount > 0) {
+      console.log('Checkout Validation Errors:', formik.errors)
+  }
 
   // Format image URL helper
   const formatImageUrl = (path) => {
@@ -109,76 +116,82 @@ const CheckoutContent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Left Column - Shipping & Payment */}
           <div className="space-y-8">
-            {/* Shipping Identity */}
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#D4A017]/10 flex items-center justify-center text-[#D4A017]">
-                  <Truck size={18} />
-                </div>
-                <h2 className="text-lg font-bold text-white">Shipping Identity</h2>
-              </div>
-              
-              <div className="space-y-4">
+            <form id="checkout-form" onSubmit={formik.handleSubmit}>
+                {/* Shipping Identity */}
                 <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                    Full Name
-                  </label>
-                  <Input 
-                    name="fullName"
-                    value={formik.values.fullName}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.fullName && formik.errors.fullName}
-                    placeholder="John Alex"
-                    className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
-                  />
+                <div className="flex items-center gap-2 mb-6">
+                    <div className="w-8 h-8 rounded-lg bg-[#D4A017]/10 flex items-center justify-center text-[#D4A017]">
+                    <Truck size={18} />
+                    </div>
+                    <h2 className="text-lg font-bold text-white">Shipping Identity</h2>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                    Delivery Address
-                  </label>
-                  <Input 
-                    name="address"
-                    value={formik.values.address}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.address && formik.errors.address}
-                    placeholder="123 Collector Lane"
-                    className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                      City
+                
+                <div className="space-y-4">
+                    <div>
+                    <label htmlFor="fullName" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                        Full Name
                     </label>
                     <Input 
-                      name="city"
-                      value={formik.values.city}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched.city && formik.errors.city}
-                      placeholder="Neo-San Francisco"
-                      className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
+                        id="fullName"
+                        name="fullName"
+                        value={formik.values.fullName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.fullName && formik.errors.fullName}
+                        placeholder="John Alex"
+                        className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
                     />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
-                      Zip / Postal Code
+                    </div>
+                    <div>
+                    <label htmlFor="address" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                        Delivery Address
                     </label>
                     <Input 
-                      name="zipCode"
-                      value={formik.values.zipCode}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched.zipCode && formik.errors.zipCode}
-                      placeholder="94103"
-                      className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
+                        id="address"
+                        name="address"
+                        value={formik.values.address}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.address && formik.errors.address}
+                        placeholder="123 Collector Lane"
+                        className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
                     />
-                  </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="city" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                        City
+                        </label>
+                        <Input 
+                        id="city"
+                        name="city"
+                        value={formik.values.city}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.city && formik.errors.city}
+                        placeholder="Neo-San Francisco"
+                        className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="zipCode" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                        Zip / Postal Code
+                        </label>
+                        <Input 
+                        id="zipCode"
+                        name="zipCode"
+                        value={formik.values.zipCode}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.zipCode && formik.errors.zipCode}
+                        placeholder="94103"
+                        className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]"
+                        />
+                    </div>
+                    </div>
                 </div>
-              </div>
-            </div>
+                </div>
+            </form>
 
             {/* Secure Payment Section (Payment Element Only) */}
             <div className="bg-[#0B1220] border border-white/5 rounded-xl p-6">
@@ -271,15 +284,31 @@ const CheckoutContent = () => {
                 <span className="text-[#D4A017] text-2xl font-bold">${total.toFixed(2)}</span>
               </div>
               
-              {/* Authorize Payment Button - Moved Here */}
+              {/* Authorize Payment Button - Triggers Form Submission */}
               <Button 
-                onClick={() => formik.handleSubmit()}
+                onClick={() => {
+                  console.log('Authorize Payment Clicked')
+                  formik.handleSubmit()
+                }}
                 disabled={!stripe || isProcessing}
                 className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                type="button"
               >
                 {isProcessing ? 'Processing...' : `Authorize Payment`}
                 {!isProcessing && <ArrowRight size={18} />}
               </Button>
+              
+              {/* Validation Error Message */}
+              {Object.keys(formik.errors).length > 0 && formik.submitCount > 0 && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
+                   <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-red-500 font-bold text-xs">!</span>
+                   </div>
+                   <p className="text-red-400 text-xs font-medium">
+                     Please correct the errors in the Shipping Identity form before proceeding.
+                   </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
