@@ -11,7 +11,11 @@ import {
   Register,
   ForgotPassword,
   ProductDetail,
-  Marketplace
+  Marketplace,
+  Cart,
+  Checkout,
+  OrderComplete,
+  OrderHistory
 } from '@pages'
 
 export const router = createBrowserRouter([
@@ -30,6 +34,22 @@ export const router = createBrowserRouter([
   {
     path: '/product/:id',
     element: <ProductDetail />,
+  },
+  {
+    path: '/cart',
+    element: <Cart />,
+  },
+  {
+    path: '/checkout',
+    element: <Checkout />,
+  },
+  {
+    path: '/order-complete',
+    element: <OrderComplete />,
+  },
+  {
+    path: '/orders',
+    element: <OrderHistory />,
   },
   {
     path: '/login',

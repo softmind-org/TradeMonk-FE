@@ -4,7 +4,7 @@
  */
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '@/context'
+import { useAuth, useCart } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
 import { 
   LayoutDashboard, 
@@ -14,13 +14,14 @@ import {
   LogOut 
 } from 'lucide-react'
 
-const Header = ({ cartCount = 0 }) => {
+const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   
   const { user, isAuthenticated } = useAuth()
+  const { itemCount } = useCart()
   const { mutate: logout } = useLogout()
 
   // Close dropdown when clicking outside
@@ -183,9 +184,9 @@ const Header = ({ cartCount = 0 }) => {
             <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            {cartCount > 0 && (
+            {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-secondary text-background text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {cartCount}
+                {itemCount}
               </span>
             )}
           </Link>

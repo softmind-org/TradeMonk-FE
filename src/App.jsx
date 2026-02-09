@@ -3,14 +3,16 @@
  * Entry point for the React application
  */
 import { RouterProvider } from 'react-router-dom'
-import { AuthProvider, ThemeProvider } from '@context'
+import { AuthProvider, CartProvider } from '@context'
 import router from './router'
 import './index.css'
 
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <CartProvider>
+        <RouterProvider router={router} />
+      </CartProvider>
     </AuthProvider>
   )
 }

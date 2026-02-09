@@ -1,0 +1,48 @@
+/**
+ * Checkout Page Wrapper
+ * Wraps content in Stripe Elements provider
+ */
+import { useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
+import { MainLayout } from '@layouts'
+import { useCart, useAuth } from '@context'
+import CheckoutContent from './CheckoutContent'
+
+// Initialize Stripe (Replace with your public key)
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_TYooMQauvdEDq54NiTphI7jx')
+
+const Checkout = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { items, total } = useCart()
+
+  // Redirect if cart is empty or user not logged in
+  if (!authLoading && !isAuthenticated) return <Navigate to="/login" replace />
+  if (items.length === 0) return <Navigate to="/marketplace" replace />
+
+  // Mock Element options for development
+  const options = {
+    mode: 'payment',
+    amount: Math.round(total > 0 ? total * 100 : 100), // ensure amount > 0, convert to cents
+    currency: 'usd',
+    appearance: {
+      theme: 'night',
+      variables: {
+        colorPrimary: '#D4A017',
+        colorBackground: '#111C2E',
+        colorText: '#ffffff',
+      },
+    },
+  }
+
+  return (
+    <MainLayout>
+      <Elements stripe={stripePromise} options={options}>
+        <CheckoutContent />
+      </Elements>
+    </MainLayout>
+  )
+}
+
+export default Checkout
