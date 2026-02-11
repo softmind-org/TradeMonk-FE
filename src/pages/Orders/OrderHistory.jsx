@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+
 import { Button } from '@components/ui'
 import { ArrowRight, Package, MapPin, CheckCircle, Clock, Search } from 'lucide-react'
 import { pokemonLogo } from '@assets'
@@ -38,16 +38,16 @@ const OrderHistory = () => {
 
   if (loading) {
     return (
-      <MainLayout>
+      <>
          <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-secondary border-t-transparent rounded-full"></div>
          </div>
-      </MainLayout>
+      </>
     )
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen py-10 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
           
@@ -200,7 +200,7 @@ const OrderHistory = () => {
 
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 

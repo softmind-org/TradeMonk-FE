@@ -4,7 +4,6 @@
  * Only accessible to logged-in users
  */
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
 import { Button } from '@components/ui'
 import { useCart, useAuth } from '@context'
 import { ArrowLeft, ShieldCheck, ArrowRight } from 'lucide-react'
@@ -26,10 +25,6 @@ const Cart = () => {
     isLoading: cartLoading
   } = useCart()
 
-  /**
-   * Helper to format image URLs
-   * Prepends the backend server origin to the stored relative path
-   */
   const formatImageUrl = (path) => {
     if (!path || path === '') return pokemonLogo
     if (path.startsWith('http')) return path
@@ -47,75 +42,33 @@ const Cart = () => {
     return `${serverBase}${cleanPath}`
   }
 
-  // Redirect to login if not authenticated
   if (!authLoading && !isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 
-  // Loading state
   if (authLoading || cartLoading) {
     return (
-      <MainLayout>
-        <div className="bg-background min-h-screen py-8 px-4 md:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="h-6 w-40 bg-gray-700/50 rounded animate-pulse mb-8"></div>
-            <div className="h-10 w-64 bg-gray-700/50 rounded animate-pulse mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-4">
-                {[1, 2].map(i => (
-                  <div key={i} className="h-32 bg-gray-700/20 rounded-xl animate-pulse"></div>
-                ))}
-              </div>
-              <div className="h-64 bg-gray-700/20 rounded-xl animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    )
-  }
-
-  // Empty cart state
-  if (items.length === 0) {
-    return (
-      <MainLayout>
-        <div className="bg-background min-h-screen py-8 px-4 md:px-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Back Link */}
-            <Link 
-              to="/marketplace" 
-              className="inline-flex items-center text-muted-foreground hover:text-white text-sm font-medium mb-8 transition-colors"
-            >
-              <ArrowLeft size={16} className="mr-2" />
-              RETURN TO GALLERY
-            </Link>
-
-            {/* Empty State */}
-            <div className="text-center py-20 bg-card border border-border rounded-2xl">
-              <div className="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Your Vault is Empty</h2>
-              <p className="text-muted-foreground mb-8">Start adding rare cards to your collection!</p>
-              <Button 
-                onClick={() => navigate('/marketplace')}
-                className="bg-secondary hover:bg-secondary/90 text-black font-bold px-8"
-              >
-                Browse Marketplace
-              </Button>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    )
-  }
-
-  return (
-    <MainLayout>
       <div className="bg-background min-h-screen py-8 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
-          {/* Back Link */}
+          <div className="h-6 w-40 bg-gray-700/50 rounded animate-pulse mb-8"></div>
+          <div className="h-10 w-64 bg-gray-700/50 rounded animate-pulse mb-8"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {[1, 2].map(i => (
+                <div key={i} className="h-32 bg-gray-700/20 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+            <div className="h-64 bg-gray-700/20 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-background min-h-screen py-8 px-4 md:px-8">
+        <div className="max-w-6xl mx-auto">
           <Link 
             to="/marketplace" 
             className="inline-flex items-center text-muted-foreground hover:text-white text-sm font-medium mb-8 transition-colors"
@@ -124,80 +77,101 @@ const Cart = () => {
             RETURN TO GALLERY
           </Link>
 
-          {/* Page Title */}
-          <div className="flex items-center gap-4 mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">Your Vault</h1>
-            <span className="bg-secondary text-black text-xs font-bold px-3 py-1 rounded-full">
-              {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
-            </span>
+          <div className="text-center py-20 bg-card border border-border rounded-2xl">
+            <div className="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Your Vault is Empty</h2>
+            <p className="text-muted-foreground mb-8">Start adding rare cards to your collection!</p>
+            <Button 
+              onClick={() => navigate('/marketplace')}
+              className="bg-secondary hover:bg-secondary/90 text-black font-bold px-8"
+            >
+              Browse Marketplace
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-background min-h-screen py-8 px-4 md:px-8">
+      <div className="max-w-6xl mx-auto">
+        <Link 
+          to="/marketplace" 
+          className="inline-flex items-center text-muted-foreground hover:text-white text-sm font-medium mb-8 transition-colors"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          RETURN TO GALLERY
+        </Link>
+
+        <div className="flex items-center gap-4 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Your Vault</h1>
+          <span className="bg-secondary text-black text-xs font-bold px-3 py-1 rounded-full">
+            {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            {items.map(item => (
+              <CartItem
+                key={item.id}
+                item={item}
+                onIncrement={incrementQuantity}
+                onDecrement={decrementQuantity}
+                onRemove={removeFromCart}
+                formatImageUrl={formatImageUrl}
+              />
+            ))}
           </div>
 
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items - Left Column */}
-            <div className="lg:col-span-2 space-y-4">
-              {items.map(item => (
-                <CartItem
-                  key={item.id}
-                  item={item}
-                  onIncrement={incrementQuantity}
-                  onDecrement={decrementQuantity}
-                  onRemove={removeFromCart}
-                  formatImageUrl={formatImageUrl}
-                />
-              ))}
-            </div>
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-xl p-6 sticky top-24">
+              <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">
+                Order Summary
+              </h2>
 
-            {/* Order Summary - Right Column */}
-            <div className="lg:col-span-1">
-              <div className="bg-card border border-border rounded-xl p-6 sticky top-24">
-                <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">
-                  Order Summary
-                </h2>
-
-                {/* Summary Lines */}
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Subtotal</span>
-                    <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Insured Shipping</span>
-                    <span className="text-white font-medium">${shipping.toFixed(2)}</span>
-                  </div>
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-sm">Subtotal</span>
+                  <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
                 </div>
-
-                {/* Total */}
-                <div className="flex justify-between items-center pt-4 border-t border-border mb-6">
-                  <span className="text-white font-bold">Total</span>
-                  <span className="text-secondary text-2xl font-bold">${total.toFixed(2)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-sm">Insured Shipping</span>
+                  <span className="text-white font-medium">${shipping.toFixed(2)}</span>
                 </div>
-
-                {/* Checkout Button */}
-                <Button 
-                  onClick={() => navigate('/checkout')}
-                  className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  Proceed to Checkout
-                  <ArrowRight size={16} />
-                </Button>
-
-                {/* Secure Checkout Badge */}
-                <div className="flex items-center justify-center gap-2 mt-6 text-muted-foreground">
-                  <ShieldCheck size={16} className="text-secondary" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Secure Stripe Checkout</span>
-                </div>
-
-                {/* Disclaimer */}
-                <p className="text-[10px] text-muted-foreground/60 text-center mt-4 leading-relaxed">
-                  Platform commission and professional grading fees included in the total price.
-                </p>
               </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-border mb-6">
+                <span className="text-white font-bold">Total</span>
+                <span className="text-secondary text-2xl font-bold">${total.toFixed(2)}</span>
+              </div>
+
+              <Button 
+                onClick={() => navigate('/checkout')}
+                className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Proceed to Checkout
+                <ArrowRight size={16} />
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 mt-6 text-muted-foreground">
+                <ShieldCheck size={16} className="text-secondary" />
+                <span className="text-xs font-bold uppercase tracking-wider">Secure Stripe Checkout</span>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground/60 text-center mt-4 leading-relaxed">
+                Platform commission and professional grading fees included in the total price.
+              </p>
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   )
 }
 

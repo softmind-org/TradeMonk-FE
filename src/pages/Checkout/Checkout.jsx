@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
-import { MainLayout } from '@layouts'
+
 import { useCart, useAuth } from '@context'
 import CheckoutContent from './CheckoutContent'
 
@@ -37,11 +37,11 @@ const Checkout = () => {
   }
 
   return (
-    <MainLayout>
+    <>
       <Elements stripe={stripePromise} options={options}>
         <CheckoutContent />
       </Elements>
-    </MainLayout>
+    </>
   )
 }
 

@@ -1,8 +1,4 @@
-/**
- * Login Page
- */
 import { Link, useNavigate } from 'react-router-dom'
-import { AuthLayout } from '@layouts'
 import { Card, Button, Input, InputPassword } from '@components/ui'
 import { useAuth } from '@context'
 import { useLogin } from '@hooks/useLogin'
@@ -22,7 +18,6 @@ const Login = () => {
     },
     validationSchema: loginSchema,
     onSubmit: (values) => {
-      // Call the login mutation
       login(values, {
         onSuccess: (response) => {
           console.log('Login successful:', response)
@@ -30,11 +25,14 @@ const Login = () => {
           if (response.success && response.data) {
             const { accessToken, ...user } = response.data
             
-            // Update AuthContext with user data and token
             loginContext(user, accessToken)
             
-            // Redirect to home page
-            navigate('/')
+            // Redirect based on role
+            if (user.role === 'seller') {
+                navigate('/seller/dashboard')
+            } else {
+                navigate('/')
+            }
           }
         },
         onError: (error) => {
@@ -45,7 +43,6 @@ const Login = () => {
   })
 
   return (
-    <AuthLayout>
       <Card className="bg-card border border-border p-8 md:p-10 relative overflow-hidden">
         {/* Top Gradient Line */}
         <div 
@@ -125,7 +122,6 @@ const Login = () => {
           </div>
         </form>
       </Card>
-    </AuthLayout>
   )
 }
 

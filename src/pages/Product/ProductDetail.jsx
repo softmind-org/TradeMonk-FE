@@ -4,7 +4,7 @@
  */
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+
 import { Button, MarketHistoryChart } from '@components/ui'
 import { useProductDetail } from '@/hooks/useProductDetail'
 import { useCart } from '@context'
@@ -64,7 +64,7 @@ const ProductDetail = () => {
   // Loading State
   if (isLoading) {
     return (
-      <MainLayout>
+      <>
         <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="h-6 w-40 bg-gray-700/50 rounded animate-pulse mb-8"></div>
@@ -81,14 +81,14 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
-      </MainLayout>
+      </>
     )
   }
 
   // Error State
   if (error || !product) {
     return (
-      <MainLayout>
+      <>
         <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
           <div className="max-w-7xl mx-auto text-center py-20">
             <h1 className="text-2xl font-bold text-white mb-4">Product Not Found</h1>
@@ -98,7 +98,7 @@ const ProductDetail = () => {
             </Link>
           </div>
         </div>
-      </MainLayout>
+      </>
     )
   }
 
@@ -123,7 +123,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb / Back Link */}
@@ -295,7 +295,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 

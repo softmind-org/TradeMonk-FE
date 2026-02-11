@@ -4,7 +4,7 @@
  */
 import { useEffect } from 'react'
 import { useLocation, useNavigate, Navigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+
 import { Button } from '@components/ui'
 import { Check, Download, ArrowRight } from 'lucide-react'
 import { jsPDF } from 'jspdf'
@@ -51,7 +51,7 @@ const OrderComplete = () => {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen flex items-center justify-center p-4">
         <div className="max-w-3xl w-full text-center">
           
@@ -133,7 +133,7 @@ const OrderComplete = () => {
 
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 

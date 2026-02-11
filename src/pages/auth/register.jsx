@@ -1,8 +1,4 @@
-/**
- * Register Page
- */
 import { Link, useNavigate } from 'react-router-dom'
-import { AuthLayout } from '@layouts'
 import { Card, Button, Input, InputPassword } from '@components/ui'
 import { useRegister } from '@hooks/useRegister'
 import { Mail, User, Lock } from 'lucide-react'
@@ -22,12 +18,6 @@ const Register = () => {
     },
     validationSchema: registerSchema,
     onSubmit: (values) => {
-      // Call the register mutation
-      // Map 'name' to 'fullName' as expected by the hook/backend if needed
-      // The schema uses 'name', but the previous code used 'fullName'. 
-      // Let's check the schema again. The schema has 'name'. 
-      // The backend expectation (from previous diffs) was 'fullName'. 
-      // So we should map it.
       const payload = {
         fullName: values.name,
         email: values.email,
@@ -38,7 +28,6 @@ const Register = () => {
       register(payload, {
         onSuccess: (data) => {
           console.log('Registration successful:', data)
-          // Navigate to login page after successful registration
           navigate('/login')
         },
         onError: (error) => {
@@ -49,7 +38,6 @@ const Register = () => {
   })
 
   return (
-    <AuthLayout>
       <Card className="bg-card border border-border p-8 md:p-10 relative overflow-hidden">
         {/* Top Gradient Line */}
         <div 
@@ -161,7 +149,6 @@ const Register = () => {
           </div>
         </form>
       </Card>
-    </AuthLayout>
   )
 }
 

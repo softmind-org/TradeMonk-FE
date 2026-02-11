@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+
 import { Button, ProductCard, Input } from '@components/ui'
 import { useAuth } from '@context'
 import { useMarketplaceProducts } from '@/hooks/useMarketplaceProducts'
@@ -159,7 +159,7 @@ const Marketplace = () => {
   )
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen py-8">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8">
           
@@ -299,7 +299,7 @@ const Marketplace = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 
