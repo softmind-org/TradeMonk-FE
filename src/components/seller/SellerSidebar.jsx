@@ -86,7 +86,7 @@ const SellerSidebar = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Footer Actions */}
-          <div className="p-4 border-t border-white/5">
+          <div className="p-4 mb-2 border-t border-white/5">
             <button 
               onClick={handleExitSellerMode}
               className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-lg w-full transition-colors"

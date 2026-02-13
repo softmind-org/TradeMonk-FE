@@ -73,7 +73,7 @@ const CartItem = ({
 
             {/* Price */}
             <p className="text-white font-bold text-lg md:text-xl">
-              ${(price * quantity).toFixed(2)}
+              €{(price * quantity).toFixed(2)}
             </p>
           </div>
         </div>

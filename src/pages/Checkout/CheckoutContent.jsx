@@ -259,7 +259,7 @@ const CheckoutContent = () => {
                           QTY: {item.quantity}
                         </span>
                         <span className="text-[#D4A017] font-bold text-sm">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          €{(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -271,17 +271,17 @@ const CheckoutContent = () => {
               <div className="space-y-3 pt-6 border-t border-white/10">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium">Subtotal</span>
-                  <span className="text-white font-bold">${subtotal.toFixed(2)}</span>
+                  <span className="text-white font-bold">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium">Insured Shipping</span>
-                  <span className="text-white font-bold">${shipping.toFixed(2)}</span>
+                  <span className="text-white font-bold">€{shipping.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4 mt-4 border-t border-white/10 mb-8">
                 <span className="text-white font-bold text-lg">Grand Total</span>
-                <span className="text-[#D4A017] text-2xl font-bold">${total.toFixed(2)}</span>
+                <span className="text-[#D4A017] text-2xl font-bold">€{total.toFixed(2)}</span>
               </div>
               
               {/* Authorize Payment Button - Triggers Form Submission */}

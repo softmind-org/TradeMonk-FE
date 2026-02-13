@@ -29,9 +29,9 @@ const ProductCard = ({
 }) => {
   // Format price
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IE', { // Ireland/EU format
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
       minimumFractionDigits: 2,
     }).format(price)
   }

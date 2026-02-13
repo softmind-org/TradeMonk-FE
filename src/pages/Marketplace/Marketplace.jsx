@@ -219,14 +219,14 @@ const Marketplace = () => {
                  <FilterSection title="Price Authority">
                     <div className="space-y-3">
                        <Input 
-                          placeholder="$ Min" 
+                          placeholder="€ Min" 
                           type="number" 
                           value={filters.priceMin}
                           onChange={(e) => handleFilterChange('priceMin', e.target.value)}
                           className="bg-[#111C2E] border-white/10 h-10 text-sm"
                        />
                        <Input 
-                          placeholder="$ Max" 
+                          placeholder="€ Max" 
                           type="number"
                           value={filters.priceMax}
                           onChange={(e) => handleFilterChange('priceMax', e.target.value)}

@@ -25,7 +25,7 @@ const Checkout = () => {
   const options = {
     mode: 'payment',
     amount: Math.round(total > 0 ? total * 100 : 100), // ensure amount > 0, convert to cents
-    currency: 'usd',
+    currency: 'eur',
     appearance: {
       theme: 'night',
       variables: {

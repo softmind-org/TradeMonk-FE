@@ -6,8 +6,10 @@ import {
   MoreVertical,
   Activity
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Overview = () => {
+  const navigate = useNavigate()
   const stats = [
     { title: 'Total Sales', value: '$12,450.00', icon: DollarSign, change: '+12.5%', trend: 'up' },
     { title: 'Active Listings', value: '8', icon: Package, change: '+2', trend: 'up' },
@@ -26,7 +28,9 @@ const Overview = () => {
         {/* Page Title */}
         <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">Overview</h1>
-            <button className="bg-[#D4A017] hover:bg-[#D4A017]/90 text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors">
+            <button 
+                onClick={() => navigate('/seller/listings/add')}
+                className="bg-[#D4A017] hover:bg-[#D4A017]/90 text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors">
                 <Package size={18} />
                 Add Listing
             </button>

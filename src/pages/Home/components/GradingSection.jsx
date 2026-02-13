@@ -11,7 +11,7 @@ const GradingSection = () => {
       <div className="max-w-4xl mx-auto px-4 text-center">
         {/* Heading */}
         <h2 className="text-foreground text-3xl md:text-4xl lg:text-5xl font-semibold italic mb-6">
-          Professional Grading Standar
+          Professional Grading Standard
         </h2>
         
         {/* Description */}

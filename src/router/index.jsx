@@ -15,7 +15,10 @@ import {
   Cart,
   Checkout,
   OrderComplete,
-  OrderHistory
+  OrderHistory,
+  AddListing,
+  MyListings,
+  ListingDetail
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -93,7 +96,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'listings',
-        element: <div className="p-8 text-white">Listings Page (Coming Soon)</div>,
+        element: <MyListings />,
+      },
+      {
+        path: 'listings/add',
+        element: <AddListing />,
+      },
+      {
+        path: 'listings/edit',
+        element: <AddListing />,
+      },
+      {
+        path: 'listings/:id',
+        element: <ListingDetail />,
       },
       {
         path: 'orders',

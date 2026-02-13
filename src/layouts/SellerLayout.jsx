@@ -19,7 +19,7 @@ const SellerLayout = () => {
             <SellerHeader onMenuClick={() => setSidebarOpen(true)} />
             
             <main className="flex-1 overflow-y-auto bg-[#020617] p-6 md:p-8">
-                <div className="max-w-7xl mx-auto">
+                <div className=" mx-auto">
                     <Outlet />
                 </div>
             </main>

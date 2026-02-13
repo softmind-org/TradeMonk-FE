@@ -207,7 +207,7 @@ const ProductDetail = () => {
                   <div>
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Price</div>
                     <div className="text-5xl md:text-6xl font-bold text-white">
-                      ${product.price?.toFixed(2)}
+                      €{product.price?.toFixed(2)}
                     </div>
                   </div>
                   
