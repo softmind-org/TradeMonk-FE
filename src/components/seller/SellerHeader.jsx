@@ -25,8 +25,8 @@ const SellerHeader = ({ onMenuClick }) => {
         <div className="flex items-center gap-6">
             {/* Balance Badge */}
             <div className="hidden md:flex items-center gap-3 bg-[#111C2E] border border-white/10 rounded-lg px-4 py-2">
-                <div className="w-6 h-6 rounded-full bg-[#D4A017]/20 flex items-center justify-center text-[#D4A017] text-xs font-bold">$</div>
-                <span className="text-white font-bold text-sm">$12,450.00</span>
+                <div className="w-6 h-6 rounded-full bg-[#D4A017]/20 flex items-center justify-center text-[#D4A017] text-xs font-bold">€</div>
+                <span className="text-white font-bold text-sm">€12,450.00</span>
             </div>
 
             {/* Notifications */}

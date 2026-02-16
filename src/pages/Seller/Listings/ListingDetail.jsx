@@ -109,45 +109,6 @@ const ListingDetail = () => {
             )}
           </div>
 
-          {/* Quick Stats */}
-          <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock size={14} className="text-muted-foreground" />
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Quick Stats</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#0B1220] rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Eye size={12} className="text-muted-foreground" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Page Views</span>
-                </div>
-                <span className="text-xl font-bold text-white">1,204</span>
-              </div>
-              <div className="bg-[#0B1220] rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Heart size={12} className="text-muted-foreground" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Watchers</span>
-                </div>
-                <span className="text-xl font-bold text-white">42</span>
-              </div>
-            </div>
-          </div>
-          
-          {listing.backImage && (
-            <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <ImageIcon size={14} className="text-muted-foreground" />
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Back View</span>
-              </div>
-              <div className="bg-[#0B1220] rounded-xl p-4 border border-white/5 aspect-video flex items-center justify-center">
-                <img 
-                  src={formatImageUrl(listing.backImage)} 
-                  alt="Back View" 
-                  className="max-h-full object-contain drop-shadow-lg"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right Column - Details */}

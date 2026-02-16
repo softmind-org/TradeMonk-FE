@@ -59,7 +59,7 @@ export const productService = {
      */
     getSellerProducts: async (params = {}) => {
         const queryParams = new URLSearchParams(params).toString()
-        const endpoint = `/products${queryParams ? `?${queryParams}` : ''}`
+        const endpoint = `/products/me${queryParams ? `?${queryParams}` : ''}`
         return api.get(endpoint)
     },
 

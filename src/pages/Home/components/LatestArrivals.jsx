@@ -78,9 +78,9 @@ const LatestArrivals = ({ onCardClick }) => {
     price: product.price,
     condition: product.condition,
     edition: product.collectionName,
-    badge: product.badges?.[0], // Use first badge if available
+    badge: product.badges?.[0] || 'FAST SHIPPING', // Use first badge if available or default
     topBadge: product.rarity,
-    rating: product.rating || 0,
+    rating: product.rating || 5,
     isFavorite: !!favorites[product._id]
   })) || []
 

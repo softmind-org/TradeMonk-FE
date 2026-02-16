@@ -18,7 +18,9 @@ import {
   OrderHistory,
   AddListing,
   MyListings,
-  ListingDetail
+  ListingDetail,
+  SalesOrders,
+  Payouts
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -112,11 +114,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'orders',
-        element: <div className="p-8 text-white">Orders Page (Coming Soon)</div>,
+        element: <SalesOrders />,
       },
       {
         path: 'payouts',
-        element: <div className="p-8 text-white">Payouts Page (Coming Soon)</div>,
+        element: <Payouts />,
       },
       {
         path: 'settings',
