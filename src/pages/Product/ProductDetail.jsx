@@ -19,21 +19,19 @@ const ProductDetail = () => {
   // Fetch product data from API
   const { data: product, isLoading, error } = useProductDetail(id)
   const { addToCart, isInCart } = useCart()
+  const [isAdding, setIsAdding] = useState(false)
   
   // Add to cart handler
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (product) {
-      const cartItem = {
-        id: product._id,
-        title: product.title,
-        collectionName: product.collectionName,
-        price: product.price,
-        image: product.images?.[0],
-        backImage: product.backImage,
+      setIsAdding(true)
+      try {
+        await addToCart(product, 1)
+        setAddedToCart(true)
+        setTimeout(() => setAddedToCart(false), 2000)
+      } finally {
+        setIsAdding(false)
       }
-      addToCart(cartItem)
-      setAddedToCart(true)
-      setTimeout(() => setAddedToCart(false), 2000)
     }
   }
 
@@ -214,18 +212,23 @@ const ProductDetail = () => {
                   <div className="flex flex-col gap-3 w-full md:w-auto min-w-[200px]">
                     <Button 
                        onClick={handleAddToCart}
-                       disabled={addedToCart}
-                       className={`w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer ${addedToCart ? 'opacity-90' : ''}`}
+                       disabled={isAdding}
+                       className={`w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer ${isAdding ? 'opacity-80' : ''}`}
                     >
-                      {addedToCart ? (
+                      {isAdding ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                          Processing...
+                        </>
+                      ) : addedToCart ? (
                         <>
                           <Check size={18} />
-                          Added to Cart
+                          Added to Vault
                         </>
                       ) : (
                         <>
                           <ShoppingCart size={18} />
-                          Add to Cart
+                          Add to Vault
                         </>
                       )}
                     </Button>

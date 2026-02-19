@@ -40,7 +40,7 @@ const CartItem = ({
             
             {/* Delete Button */}
             <button 
-              onClick={() => onRemove(id)}
+              onClick={() => onRemove(item.id, item.cartItemId)}
               className="text-red-400/60 hover:text-red-400 transition-colors p-1 flex-shrink-0"
               aria-label="Remove item"
             >
@@ -53,7 +53,7 @@ const CartItem = ({
             {/* Quantity Controls */}
             <div className="flex items-center gap-1 bg-background rounded-lg border border-border">
               <button 
-                onClick={() => onDecrement(id)}
+                onClick={() => onDecrement(item)}
                 className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
                 aria-label="Decrease quantity"
               >
@@ -63,7 +63,7 @@ const CartItem = ({
                 {quantity}
               </span>
               <button 
-                onClick={() => onIncrement(id)}
+                onClick={() => onIncrement(item)}
                 className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
                 aria-label="Increase quantity"
               >

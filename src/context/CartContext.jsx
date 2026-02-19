@@ -1,20 +1,20 @@
-/**
- * Cart Context
- * Manages cart state with localStorage persistence
- * Ready for future API integration
- */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import cartService from '@/services/cartService'
+import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
 
-const CART_STORAGE_KEY = 'trademonk_cart'
+const CART_STORAGE_KEY = 'trademonk_guest_cart'
 const SHIPPING_COST = 15.00 // Fixed shipping cost
+const SERVICE_FEE_RATE = 0.015 // 1.5% Stripe processing fee
+const SERVICE_FEE_FIXED = 0.25 // €0.25 fixed per transaction
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated, user } = useAuth()
 
-  // Load cart from localStorage on mount
+  // Load guest cart from localStorage on mount
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY)
@@ -22,111 +22,212 @@ export const CartProvider = ({ children }) => {
         setItems(JSON.parse(savedCart))
       }
     } catch (error) {
-      console.error('Error loading cart from localStorage:', error)
+      console.error('Error loading guest cart:', error)
+    } finally {
+      if (!isAuthenticated) setIsLoading(false)
+    }
+  }, [isAuthenticated])
+
+  // Save cart to localStorage whenever items change (for persistence and guests)
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+  }, [items])
+
+  // Fetch cart from backend
+  const fetchCart = useCallback(async () => {
+    if (!isAuthenticated) return
+
+    try {
+      setIsLoading(true)
+      const response = await cartService.getCart()
+      if (response?.success) {
+        // Transform the backend model to match the frontend items structure
+        const transformedItems = response.data.map(item => ({
+          cartItemId: item._id,
+          id: item.productId?._id,
+          title: item.productId?.title,
+          price: item.productId?.price,
+          image: item.productId?.images?.[0] || '',
+          quantity: item.quantity,
+          seller: item.productId?.seller,
+          maxQuantity: item.productId?.quantity
+        }))
+        setItems(transformedItems)
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [isAuthenticated])
 
-  // Save cart to localStorage whenever items change
+  // Initial load
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
-      console.log('Cart updated:', items)
-    }
-  }, [items, isLoading])
+    fetchCart()
+  }, [fetchCart])
 
-  // Add item to cart
-  const addToCart = useCallback((product) => {
-    setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id)
-      
-      if (existingItem) {
-        // limit quantity to 10 for now as per requirement (or stock if available)
-        const newQuantity = existingItem.quantity + 1
-        if (newQuantity > (product.maxQuantity || 10)) {
-            console.warn('Max quantity reached for:', product.title)
-            return prevItems
+  // Sync Local Cart to Backend on Login
+  useEffect(() => {
+    const syncCart = async () => {
+      if (isAuthenticated && items.length > 0) {
+        // Find items that don't have a cartItemId (local items)
+        const localItems = items.filter(item => !item.cartItemId)
+        if (localItems.length === 0) {
+           fetchCart()
+           return
         }
 
-        // Update quantity if item exists
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
+        setIsLoading(true)
+        try {
+          // Add each local item to backend
+          for (const item of localItems) {
+            await cartService.addToCart(item.id, item.quantity)
+          }
+          // After syncing all, fetch the final state from backend
+          await fetchCart()
+        } catch (error) {
+          console.error('Error syncing cart:', error)
+        } finally {
+          setIsLoading(false)
+        }
+      } else if (isAuthenticated) {
+        fetchCart()
       }
-      
-      // Add new item with quantity 1
-      console.log('Adding to cart:', product)
-      return [...prevItems, { ...product, quantity: 1 }]
-    })
-  }, [])
+    }
 
-  // Remove item from cart
-  const removeFromCart = useCallback((productId) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== productId))
-  }, [])
+    syncCart()
+  }, [isAuthenticated]) // Only run on auth change
 
-  // Update item quantity
-  const updateQuantity = useCallback((productId, quantity) => {
-    if (quantity < 1) {
-      removeFromCart(productId)
+  // Add item to cart
+  const addToCart = useCallback(async (product, quantity = 1) => {
+    const productId = product.id || product._id
+    
+    // 1. Check stock limits
+    const existingItem = items.find(item => item.id === productId)
+    const newQuantity = (existingItem?.quantity || 0) + quantity
+    if (product.quantity !== undefined && newQuantity > product.quantity) {
+      alert(`Only ${product.quantity} items available in stock.`)
       return
     }
+
+    if (isAuthenticated) {
+      try {
+        const response = await cartService.addToCart(productId, quantity)
+        if (response?.success) {
+          await fetchCart()
+        }
+      } catch (error) {
+        console.error('Error adding to cart:', error)
+      }
+    } else {
+      // Guest mode: update local items
+      setItems(prevItems => {
+        const exists = prevItems.find(item => item.id === productId)
+        if (exists) {
+          return prevItems.map(item =>
+            item.id === productId ? { ...item, quantity: item.quantity + quantity } : item
+          )
+        }
+        return [...prevItems, {
+          id: productId,
+          title: product.title,
+          price: product.price,
+          image: product.image || product.images?.[0],
+          quantity: quantity,
+          seller: product.seller,
+          maxQuantity: product.quantity
+        }]
+      })
+    }
+  }, [isAuthenticated, fetchCart, items])
+
+  // Remove item from cart
+  const removeFromCart = useCallback(async (id, cartItemId) => {
+    if (isAuthenticated && cartItemId) {
+      try {
+        const response = await cartService.removeFromCart(cartItemId)
+        if (response?.success) {
+          setItems(prev => prev.filter(item => item.cartItemId !== cartItemId))
+        }
+      } catch (error) {
+        console.error('Error removing from cart:', error)
+      }
+    } else {
+      // Guest mode or cleanup
+      setItems(prev => prev.filter(item => item.id !== id))
+    }
+  }, [isAuthenticated])
+
+  // Update item quantity
+  const updateQuantity = useCallback(async (productId, quantity, cartItemId) => {
+    if (quantity < 1) {
+      await removeFromCart(productId, cartItemId)
+      return
+    }
+
+    // Stock check
+    const item = items.find(i => i.id === productId)
+    if (item?.maxQuantity !== undefined && quantity > item.maxQuantity) {
+        alert(`Limit reached: Only ${item.maxQuantity} available.`)
+        return
+    }
     
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    )
-  }, [removeFromCart])
+    if (isAuthenticated) {
+      try {
+        // Backend handles quantity as absolute in this case? 
+        // Based on user feedback "quantity increase nahi ho rahi", maybe backend expects absolute?
+        // Let's assume absolute quantity update
+        const response = await cartService.addToCart(productId, quantity)
+        if (response?.success) {
+          await fetchCart()
+        }
+      } catch (error) {
+        console.error('Error updating quantity:', error)
+      }
+    } else {
+      setItems(prev => prev.map(item => 
+        item.id === productId ? { ...item, quantity } : item
+      ))
+    }
+  }, [isAuthenticated, fetchCart, items, removeFromCart])
 
   // Increment quantity
-  const incrementQuantity = useCallback((productId) => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    )
-  }, [])
+  const incrementQuantity = useCallback(async (item) => {
+    await updateQuantity(item.id, item.quantity + 1, item.cartItemId)
+  }, [updateQuantity])
 
   // Decrement quantity
-  const decrementQuantity = useCallback((productId) => {
-    setItems(prevItems => {
-      const item = prevItems.find(i => i.id === productId)
-      if (item && item.quantity <= 1) {
-        return prevItems.filter(i => i.id !== productId)
-      }
-      return prevItems.map(i =>
-        i.id === productId
-          ? { ...i, quantity: i.quantity - 1 }
-          : i
-      )
-    })
-  }, [])
+  const decrementQuantity = useCallback(async (item) => {
+    await updateQuantity(item.id, item.quantity - 1, item.cartItemId)
+  }, [updateQuantity])
 
   // Clear entire cart
-  const clearCart = useCallback(() => {
-    setItems([])
-  }, [])
+  const clearCart = useCallback(async () => {
+    if (isAuthenticated) {
+      try {
+        await cartService.clearCart()
+        setItems([])
+      } catch (error) {
+        console.error('Error clearing cart:', error)
+      }
+    } else {
+      setItems([])
+      localStorage.removeItem(CART_STORAGE_KEY)
+    }
+  }, [isAuthenticated])
 
   // Calculate totals
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const shipping = items.length > 0 ? SHIPPING_COST : 0
-  const total = subtotal + shipping
+  const serviceFee = items.length > 0 ? Math.round(((subtotal + shipping) * SERVICE_FEE_RATE + SERVICE_FEE_FIXED) * 100) / 100 : 0
+  const total = subtotal + shipping + serviceFee
 
-  // Check if item is in cart
+  // Help for product pages
   const isInCart = useCallback((productId) => {
     return items.some(item => item.id === productId)
   }, [items])
 
-  // Get item quantity
   const getItemQuantity = useCallback((productId) => {
     const item = items.find(i => i.id === productId)
     return item ? item.quantity : 0
@@ -137,6 +238,7 @@ export const CartProvider = ({ children }) => {
     itemCount,
     subtotal,
     shipping,
+    serviceFee,
     total,
     isLoading,
     addToCart,
@@ -147,6 +249,7 @@ export const CartProvider = ({ children }) => {
     clearCart,
     isInCart,
     getItemQuantity,
+    fetchCart
   }
 
   return (

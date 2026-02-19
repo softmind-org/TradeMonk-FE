@@ -2,7 +2,7 @@
  * Order Complete Page
  * Displays success message and order details after checkout
  */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, Navigate } from 'react-router-dom'
 
 import { Button } from '@components/ui'
@@ -10,44 +10,159 @@ import { Check, Download, ArrowRight } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 
 import { useCart } from '@context'
+import orderService from '@/services/orderService'
 
 const OrderComplete = () => {
-  const { state } = useLocation()
+  const { state, search } = useLocation()
   const navigate = useNavigate()
   const { clearCart } = useCart()
-  const order = state?.order
+  const [order, setOrder] = useState(state?.order || null)
+  const [isLoading, setIsLoading] = useState(!state?.order)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (order) {
-        clearCart()
-    }
-  }, [order, clearCart])
+    const finalizeOrder = async () => {
+      // If order already exists in state, just clear cart and stop
+      if (state?.order) {
+        setOrder(state.order)
+        setIsLoading(false)
+        await clearCart()
+        return
+      }
 
-  // Redirect to marketplace if no order state (prevent direct access)
-  if (!order) {
+      // Check for redirect params (Stripe redirect adds these)
+      const params = new URLSearchParams(search)
+      const paymentIntentId = params.get('payment_intent')
+      const redirectStatus = params.get('redirect_status')
+      
+      console.log('OrderComplete Debug:', { 
+        hasState: !!state?.order, 
+        paymentIntentId, 
+        redirectStatus,
+        hasPendingStorage: !!sessionStorage.getItem('tm_pending_order') 
+      })
+
+      if (paymentIntentId) {
+        if (redirectStatus && redirectStatus !== 'succeeded') {
+            setError(`Payment status: ${redirectStatus}. Please check your payment method.`)
+            setIsLoading(false)
+            return
+        }
+
+        try {
+          const pendingData = sessionStorage.getItem('tm_pending_order')
+          if (!pendingData) {
+              console.log('No pending data found, checking backend orders...')
+              const response = await orderService.getMyOrders()
+              const latestOrder = response.data?.find(o => o.paymentIntentId === paymentIntentId)
+              if (latestOrder) {
+                setOrder(latestOrder)
+                await clearCart()
+              } else {
+                setError('Order information lost. Please contact support if payment was debited.')
+              }
+              setIsLoading(false)
+              return
+          }
+
+          const { values, breakdown, items } = JSON.parse(pendingData)
+
+          const orderResponse = await orderService.createOrder({
+            items,
+            totalAmount: breakdown.buyerTotal,
+            feeBreakdown: {
+                itemsTotal: breakdown.itemsTotal,
+                serviceFee: breakdown.serviceFee,
+                platformFee: breakdown.platformFee,
+                sellerNet: breakdown.sellerNet
+            },
+            shippingAddress: {
+                fullName: values.fullName,
+                address: values.address,
+                city: values.city,
+                zipCode: values.zipCode
+            },
+            paymentIntentId
+          })
+
+          if (orderResponse.success) {
+            setOrder(orderResponse.data)
+            await clearCart()
+            sessionStorage.removeItem('tm_pending_order')
+          } else {
+            setError('Failed to finalize order. Please contact support.')
+          }
+        } catch (err) {
+          console.error('Error finalizing order after redirect:', err)
+          setError('An error occurred while confirming your order.')
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
+      }
+    }
+
+    finalizeOrder()
+  }, []) // Run once on mount only
+
+  // Redirect to marketplace if no order and no loading
+  if (!isLoading && !order && !error) {
     return <Navigate to="/marketplace" replace />
   }
 
   const handleDownloadReceipt = () => {
+    if (!order) return
     const doc = new jsPDF()
     
-    // Add content to PDF
     doc.setFontSize(20)
     doc.text('TradeMonk Receipt', 20, 20)
     
     doc.setFontSize(12)
-    doc.text(`Order ID: ${order.id}`, 20, 40)
-    doc.text(`Date: ${order.date}`, 20, 50)
-    doc.text(`Total: $${order.total}`, 20, 60)
+    doc.text(`Order ID: ${order.orderNumber || order._id}`, 20, 40)
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 20, 50)
+    doc.text(`Total: €${order.totalAmount}`, 20, 60)
     
     doc.text('Items:', 20, 80)
     let y = 90
-    order.items.forEach(item => {
-      doc.text(`- ${item.title} x${item.quantity} ($${item.price})`, 20, y)
+    order.items?.forEach(item => {
+      doc.text(`- ${item.title} x${item.quantity} (€${item.price})`, 20, y)
       y += 10
     })
     
-    doc.save(`TradeMonk_Receipt_${order.id}.pdf`)
+    doc.save(`TradeMonk_Receipt_${order.orderNumber || order._id}.pdf`)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="bg-background min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-xl font-bold text-white uppercase tracking-widest">Securing Your Order...</h2>
+          <p className="text-muted-foreground mt-2">Verifying payment with Stripe</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+            <span className="text-red-500 text-4xl">!</span>
+          </div>
+          <h1 className="text-3xl font-black text-white italic tracking-tighter mb-4 uppercase">Verification Failed</h1>
+          <p className="text-muted-foreground mb-8">{error}</p>
+          <Button 
+             onClick={() => navigate('/marketplace')}
+             className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4"
+          >
+            Back to Marketplace
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -69,7 +184,7 @@ const OrderComplete = () => {
           
           {/* Subtitle */}
           <p className="text-muted-foreground text-lg mb-12">
-            Your order <span className="text-white font-bold">{order.id}</span> has been secured and sent to grading verification.
+            Your order <span className="text-white font-bold">{order.orderNumber || order._id}</span> has been secured and sent to grading verification.
           </p>
 
           {/* Order Card */}
@@ -83,7 +198,7 @@ const OrderComplete = () => {
                   Order Date
                 </span>
                 <span className="text-white font-bold text-xl">
-                  {order.date}
+                  {new Date(order.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <div>
@@ -91,7 +206,7 @@ const OrderComplete = () => {
                   Total Secured
                 </span>
                 <span className="text-[#D4A017] font-bold text-xl">
-                  {order.total}
+                  €{order.totalAmount}
                 </span>
               </div>
               <div>

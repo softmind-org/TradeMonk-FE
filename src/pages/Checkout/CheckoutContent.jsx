@@ -11,12 +11,14 @@ import { ArrowLeft, Truck, ArrowRight, Lock } from 'lucide-react'
 import { pokemonLogo } from '@assets'
 import { useFormik } from 'formik'
 import { checkoutSchema } from '@/schemas/checkout-schema'
+import stripeService from '@/services/stripeService'
+import orderService from '@/services/orderService'
 
 const CheckoutContent = () => {
   const navigate = useNavigate()
   const stripe = useStripe()
   const elements = useElements()
-  const { items, subtotal, shipping, total, clearCart } = useCart()
+  const { items, subtotal, shipping, serviceFee, total, clearCart } = useCart()
   const { user } = useAuth()
   
   const [isProcessing, setIsProcessing] = useState(false)
@@ -32,52 +34,116 @@ const CheckoutContent = () => {
     },
     validationSchema: checkoutSchema,
     onSubmit: async (values) => {
-        console.log('Submitting form with values:', values)
-        if (!stripe || !elements) {
-            console.error('Stripe or Elements not loaded')
-            return
-        }
+        if (!stripe || !elements) return
     
         setIsProcessing(true)
         setErrorMessage(null)
     
-        // Trigger form validation for Stripe Element
-        const { error: submitError } = await elements.submit()
-        
-        if (submitError) {
-          console.error('Stripe Element Error:', submitError)
-          setErrorMessage(submitError.message)
+        try {
+          // 1. Trigger form validation for Stripe Element
+          const { error: submitError } = await elements.submit()
+          if (submitError) {
+            setErrorMessage(submitError.message)
+            return
+          }
+
+          // 2. Create Payment Intent on backend to get clientSecret & breakdown
+          // We pass items for backend to calculate totals securely
+          const response = await stripeService.createPaymentIntent({
+            sellerId: items[0]?.seller?.userId || items[0]?.seller, // Assuming single seller checkout as per controller
+            // Frontend totals for reference, backend recalculates
+          })
+
+          if (!response?.success) {
+            throw new Error(response?.message || 'Failed to initialize payment')
+          }
+
+          const { clientSecret, breakdown } = response
+
+          // 3. Persist form data to sessionStorage in case of redirect
+          sessionStorage.setItem('tm_pending_order', JSON.stringify({
+            values,
+            breakdown,
+            items: items.map(i => ({
+                productId: i.id,
+                title: i.title,
+                price: i.price,
+                image: i.image,
+                quantity: i.quantity
+            }))
+          }))
+
+          // 4. Confirm payment with Stripe
+          const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            clientSecret,
+            confirmParams: {
+              return_url: `${window.location.origin}/order-complete`,
+              payment_method_data: {
+                billing_details: {
+                  name: values.fullName,
+                  email: values.email,
+                  address: {
+                    line1: values.address,
+                    city: values.city,
+                    postal_code: values.zipCode,
+                    country: 'NL' // Default
+                  }
+                }
+              }
+            },
+            redirect: 'if_required' 
+          })
+
+          if (confirmError) {
+            setErrorMessage(confirmError.message)
+            return
+          }
+
+          if (paymentIntent.status === 'succeeded') {
+            // 4. Create Order in DB
+            const orderResponse = await orderService.createOrder({
+              items: items.map(i => ({
+                productId: i.id,
+                title: i.title,
+                price: i.price,
+                image: i.image,
+                quantity: i.quantity
+              })),
+              totalAmount: breakdown.buyerTotal,
+              feeBreakdown: {
+                itemsTotal: breakdown.itemsTotal,
+                serviceFee: breakdown.serviceFee,
+                platformFee: breakdown.platformFee,
+                sellerNet: breakdown.sellerNet
+              },
+              shippingAddress: {
+                fullName: values.fullName,
+                address: values.address,
+                city: values.city,
+                zipCode: values.zipCode
+              },
+              paymentIntentId: paymentIntent.id
+            })
+
+            if (orderResponse.success) {
+              console.log('Order created, navigating to complete page with data:', orderResponse.data)
+              sessionStorage.removeItem('tm_pending_order')
+              // DO NOT call clearCart() here — it empties the cart context,
+              // which triggers Checkout.jsx's guard (items.length === 0 → redirect to marketplace)
+              // BEFORE this navigate() can execute. Cart is cleared in OrderComplete instead.
+              navigate('/order-complete', { state: { order: orderResponse.data } })
+            } else {
+              console.error('Order creation returned success=false:', orderResponse)
+              setErrorMessage('Payment succeeded but order creation failed. Please contact support.')
+            }
+          }
+        } catch (err) {
+          console.error('Checkout error:', err)
+          setErrorMessage(err.message || 'An unexpected error occurred during checkout.')
+        } finally {
           setIsProcessing(false)
-          return
         }
-    
-        // Simulate payment processing delay (replace with actual backend call)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-    
-        const orderId = `TM-${Math.floor(100000 + Math.random() * 900000)}`
-        const orderDate = new Date().toLocaleDateString('en-US')
-        
-        const orderData = {
-          id: orderId,
-          date: orderDate,
-          total: total.toFixed(2),
-          status: 'Paid',
-          progress: 25,
-          items: items
-        }
-        
-        const existingOrders = JSON.parse(localStorage.getItem('tradeMonk_orders') || '[]')
-        localStorage.setItem('tradeMonk_orders', JSON.stringify([orderData, ...existingOrders]))
-    
-        console.log('Payment Processed Successfully', { shippingInfo: values, items, total, orderId })
-        // derived state from cart is passed to orderData, so we can clear cart in next screen
-        
-        navigate('/order-complete', { 
-          state: { 
-            order: orderData
-          } 
-        })
-        setIsProcessing(false)
     }
   })
 
@@ -276,6 +342,10 @@ const CheckoutContent = () => {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium">Insured Shipping</span>
                   <span className="text-white font-bold">€{shipping.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">Service Fee</span>
+                  <span className="text-white font-bold">€{serviceFee.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -20,7 +20,8 @@ import {
   MyListings,
   ListingDetail,
   SalesOrders,
-  Payouts
+  Payouts,
+  StoreSettings
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -122,7 +123,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <div className="p-8 text-white">Settings Page (Coming Soon)</div>,
+        element: <StoreSettings />,
       },
     ],
   },

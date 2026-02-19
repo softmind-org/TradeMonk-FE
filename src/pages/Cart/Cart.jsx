@@ -18,6 +18,7 @@ const Cart = () => {
     itemCount, 
     subtotal, 
     shipping, 
+    serviceFee,
     total,
     incrementQuantity,
     decrementQuantity,
@@ -43,7 +44,7 @@ const Cart = () => {
   }
 
   if (!authLoading && !isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" state={{ from: '/cart' }} replace />
   }
 
   if (authLoading || cartLoading) {
@@ -138,17 +139,21 @@ const Cart = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground text-sm">Subtotal</span>
-                  <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="text-white font-medium">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground text-sm">Insured Shipping</span>
-                  <span className="text-white font-medium">${shipping.toFixed(2)}</span>
+                  <span className="text-white font-medium">€{shipping.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-sm">Service Fee</span>
+                  <span className="text-white font-medium">€{serviceFee.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-border mb-6">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-secondary text-2xl font-bold">${total.toFixed(2)}</span>
+                <span className="text-secondary text-2xl font-bold">€{total.toFixed(2)}</span>
               </div>
 
               <Button 
