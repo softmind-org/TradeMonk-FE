@@ -1,16 +1,17 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import cartService from '@/services/cartService'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
 
 const CART_STORAGE_KEY = 'trademonk_guest_cart'
-const SHIPPING_COST = 15.00 // Fixed shipping cost
+const SHIPPING_COST = 15.00 // Fixed shipping cost per seller
 const SERVICE_FEE_RATE = 0.015 // 1.5% Stripe processing fee
 const SERVICE_FEE_FIXED = 0.25 // €0.25 fixed per transaction
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([])
+  const [sellerGroups, setSellerGroups] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const { isAuthenticated, user } = useAuth()
 
@@ -33,26 +34,53 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
   }, [items])
 
-  // Fetch cart from backend
+  // Build seller groups from flat items (for guest mode)
+  const buildSellerGroups = useCallback((flatItems) => {
+    const groups = {}
+    flatItems.forEach(item => {
+      const sellerId = item.seller?.userId || item.seller || 'unknown'
+      const sellerName = item.seller?.name || 'Unknown Seller'
+      if (!groups[sellerId]) {
+        groups[sellerId] = { sellerId, sellerName, items: [], subtotal: 0 }
+      }
+      groups[sellerId].items.push(item)
+      groups[sellerId].subtotal += item.price * item.quantity
+    })
+    return Object.values(groups)
+  }, [])
+
+  // Fetch cart from backend (new seller-grouped response)
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) return
 
     try {
       setIsLoading(true)
       const response = await cartService.getCart()
-      if (response?.success) {
-        // Transform the backend model to match the frontend items structure
-        const transformedItems = response.data.map(item => ({
-          cartItemId: item._id,
-          id: item.productId?._id,
-          title: item.productId?.title,
-          price: item.productId?.price,
-          image: item.productId?.images?.[0] || '',
-          quantity: item.quantity,
-          seller: item.productId?.seller,
-          maxQuantity: item.productId?.quantity
+      if (response?.success && response.sellers) {
+        // Backend returns { sellers: [{ sellerId, sellerName, items: [{ _id, productId, quantity }] }] }
+        // Transform each seller group's items into our flat items + keep groups
+        const groups = response.sellers.map(group => ({
+          sellerId: group.sellerId,
+          sellerName: group.sellerName,
+          subtotal: group.subtotal,
+          items: group.items.map(item => ({
+            cartItemId: item._id,
+            id: item.productId?._id,
+            title: item.productId?.title,
+            price: item.productId?.price,
+            image: item.productId?.images?.[0] || '',
+            quantity: item.quantity,
+            seller: item.productId?.seller,
+            maxQuantity: item.productId?.quantity
+          }))
         }))
-        setItems(transformedItems)
+
+        // Set seller groups directly from backend
+        setSellerGroups(groups)
+
+        // Flatten for backward compatibility (items array)
+        const flatItems = groups.flatMap(g => g.items)
+        setItems(flatItems)
       }
     } catch (error) {
       console.error('Error fetching cart:', error)
@@ -147,7 +175,7 @@ export const CartProvider = ({ children }) => {
       try {
         const response = await cartService.removeFromCart(cartItemId)
         if (response?.success) {
-          setItems(prev => prev.filter(item => item.cartItemId !== cartItemId))
+          await fetchCart()
         }
       } catch (error) {
         console.error('Error removing from cart:', error)
@@ -156,7 +184,7 @@ export const CartProvider = ({ children }) => {
       // Guest mode or cleanup
       setItems(prev => prev.filter(item => item.id !== id))
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, fetchCart])
 
   // Update item quantity
   const updateQuantity = useCallback(async (productId, quantity, cartItemId) => {
@@ -174,9 +202,6 @@ export const CartProvider = ({ children }) => {
     
     if (isAuthenticated) {
       try {
-        // Backend handles quantity as absolute in this case? 
-        // Based on user feedback "quantity increase nahi ho rahi", maybe backend expects absolute?
-        // Let's assume absolute quantity update
         const response = await cartService.addToCart(productId, quantity)
         if (response?.success) {
           await fetchCart()
@@ -207,19 +232,29 @@ export const CartProvider = ({ children }) => {
       try {
         await cartService.clearCart()
         setItems([])
+        setSellerGroups([])
       } catch (error) {
         console.error('Error clearing cart:', error)
       }
     } else {
       setItems([])
+      setSellerGroups([])
       localStorage.removeItem(CART_STORAGE_KEY)
     }
   }, [isAuthenticated])
 
-  // Calculate totals
+  // ── Computed seller groups for guest mode ──────────────────────
+  // When not authenticated, build groups from flat items
+  const computedSellerGroups = useMemo(() => {
+    if (isAuthenticated && sellerGroups.length > 0) return sellerGroups
+    if (items.length === 0) return []
+    return buildSellerGroups(items)
+  }, [isAuthenticated, sellerGroups, items, buildSellerGroups])
+
+  // ── Totals ─────────────────────────────────────────────────────
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = items.length > 0 ? SHIPPING_COST : 0
+  const shipping = computedSellerGroups.length > 0 ? computedSellerGroups.length * SHIPPING_COST : 0
   const serviceFee = items.length > 0 ? Math.round(((subtotal + shipping) * SERVICE_FEE_RATE + SERVICE_FEE_FIXED) * 100) / 100 : 0
   const total = subtotal + shipping + serviceFee
 
@@ -235,6 +270,7 @@ export const CartProvider = ({ children }) => {
 
   const value = {
     items,
+    sellerGroups: computedSellerGroups,
     itemCount,
     subtotal,
     shipping,

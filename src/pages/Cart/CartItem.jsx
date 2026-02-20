@@ -5,6 +5,12 @@
 import { Trash2, Minus, Plus } from 'lucide-react'
 import { pokemonLogo } from '@assets'
 
+/** Resolve image path — apply formatter if provided */
+const resolveImage = (path, formatter) => {
+  if (!path || path === '') return pokemonLogo
+  return formatter ? formatter(path) : path
+}
+
 const CartItem = ({ 
   item, 
   onIncrement, 
@@ -20,9 +26,10 @@ const CartItem = ({
         {/* Product Image */}
         <div className="w-20 h-28 md:w-24 md:h-32 bg-[#0B1220] rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
           <img 
-            src={formatImageUrl ? formatImageUrl(image) : (image || pokemonLogo)} 
+            src={resolveImage(image, formatImageUrl)} 
             alt={title}
             className="w-full h-full object-contain"
+            onError={(e) => { e.target.src = pokemonLogo }}
           />
         </div>
 

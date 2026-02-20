@@ -1,20 +1,23 @@
 /**
  * Cart Page
- * Displays cart items and order summary
+ * Displays cart items grouped by seller with order summary
  * Only accessible to logged-in users
  */
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Button } from '@components/ui'
 import { useCart, useAuth } from '@context'
-import { ArrowLeft, ShieldCheck, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, ArrowRight, Store } from 'lucide-react'
 import CartItem from './CartItem'
 import { pokemonLogo } from '@assets'
+
+const SHIPPING_PER_SELLER = 15.00
 
 const Cart = () => {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { 
     items, 
+    sellerGroups,
     itemCount, 
     subtotal, 
     shipping, 
@@ -117,19 +120,49 @@ const Cart = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
-            {items.map(item => (
-              <CartItem
-                key={item.id}
-                item={item}
-                onIncrement={incrementQuantity}
-                onDecrement={decrementQuantity}
-                onRemove={removeFromCart}
-                formatImageUrl={formatImageUrl}
-              />
+          {/* Left Column: Items grouped by seller */}
+          <div className="lg:col-span-2 space-y-6">
+            {sellerGroups.map((group, groupIdx) => (
+              <div key={group.sellerId} className="space-y-3">
+                {/* Seller Header */}
+                <div className="flex items-center gap-3 px-1">
+                  <div className="w-7 h-7 rounded-lg bg-[#D4A017]/10 flex items-center justify-center">
+                    <Store size={14} className="text-[#D4A017]" />
+                  </div>
+                  <span className="text-white font-bold text-sm uppercase tracking-wider">
+                    {group.sellerName}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    ({group.items.length} {group.items.length === 1 ? 'item' : 'items'})
+                  </span>
+                </div>
+                
+                {/* Items in this group */}
+                <div className="space-y-3">
+                  {group.items.map(item => (
+                    <CartItem
+                      key={item.id}
+                      item={item}
+                      onIncrement={incrementQuantity}
+                      onDecrement={decrementQuantity}
+                      onRemove={removeFromCart}
+                      formatImageUrl={formatImageUrl}
+                    />
+                  ))}
+                </div>
+
+                {/* Per-seller shipping note */}
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#0B1220] rounded-lg border border-white/5">
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Insured Shipping — Package {groupIdx + 1}
+                  </span>
+                  <span className="text-white text-xs font-bold">€{SHIPPING_PER_SELLER.toFixed(2)}</span>
+                </div>
+              </div>
             ))}
           </div>
 
+          {/* Right Column: Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-card border border-border rounded-xl p-6 sticky top-24">
               <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">
@@ -138,11 +171,13 @@ const Cart = () => {
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Subtotal</span>
+                  <span className="text-muted-foreground text-sm">Subtotal ({itemCount} items)</span>
                   <span className="text-white font-medium">€{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Insured Shipping</span>
+                  <span className="text-muted-foreground text-sm">
+                    Shipping ({sellerGroups.length} {sellerGroups.length === 1 ? 'package' : 'packages'})
+                  </span>
                   <span className="text-white font-medium">€{shipping.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
