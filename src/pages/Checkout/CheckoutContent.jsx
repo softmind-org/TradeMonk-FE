@@ -120,7 +120,8 @@ const CheckoutContent = () => {
             const sellerItemsTotal = group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
             const sellerPlatformFee = parseFloat((sellerItemsTotal * 0.035).toFixed(2))
             const sellerServiceFee = parseFloat((sellerItemsTotal * 0.015 + (0.25 / sellerGroups.length)).toFixed(2))
-            const sellerNet = parseFloat((sellerItemsTotal - sellerPlatformFee).toFixed(2))
+            const sellerShipping = SHIPPING_PER_SELLER
+            const sellerNet = parseFloat((sellerItemsTotal - sellerPlatformFee + sellerShipping).toFixed(2))
 
             const orderResponse = await orderService.createOrder({
               items: group.items.map(item => ({
@@ -131,9 +132,10 @@ const CheckoutContent = () => {
                 quantity: item.quantity
               })),
               sellerId: group.sellerId,
-              totalAmount: sellerItemsTotal + sellerServiceFee,
+              totalAmount: sellerItemsTotal + sellerServiceFee + sellerShipping,
               feeBreakdown: {
                 itemsTotal: sellerItemsTotal,
+                shippingFee: sellerShipping,
                 serviceFee: sellerServiceFee,
                 platformFee: sellerPlatformFee,
                 sellerNet: sellerNet

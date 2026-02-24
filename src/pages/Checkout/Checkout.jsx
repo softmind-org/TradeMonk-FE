@@ -10,8 +10,9 @@ import { Elements } from '@stripe/react-stripe-js'
 import { useCart, useAuth } from '@context'
 import CheckoutContent from './CheckoutContent'
 
-// Initialize Stripe (Replace with your public key)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_TYooMQauvdEDq54NiTphI7jx')
+// Initialize Stripe (Hardcoded to ensure it matches the backend account exactly)
+const STRIPE_KEY = 'pk_test_51Sz08C1MUXpWBXY65A37l3HBt2N10KeLx5AwiCAoUNuiN1uxjLEhfKrf9991dLlZOl0n5xMbmwr2PZnjMgrwmHNQ00L72Z5Tvd';
+const stripePromise = loadStripe(STRIPE_KEY);
 
 const Checkout = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
