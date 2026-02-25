@@ -251,12 +251,13 @@ export const CartProvider = ({ children }) => {
     return buildSellerGroups(items)
   }, [isAuthenticated, sellerGroups, items, buildSellerGroups])
 
-  // ── Totals ─────────────────────────────────────────────────────
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const shipping = computedSellerGroups.length > 0 ? computedSellerGroups.length * SHIPPING_COST : 0
-  const serviceFee = items.length > 0 ? Math.round(((subtotal + shipping) * SERVICE_FEE_RATE + SERVICE_FEE_FIXED) * 100) / 100 : 0
-  const total = subtotal + shipping + serviceFee
+  
+  // Service fee is now absorbed by the seller/platform, so the buyer doesn't pay it directly
+  const serviceFee = 0
+  const total = subtotal + shipping
 
   // Help for product pages
   const isInCart = useCallback((productId) => {

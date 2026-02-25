@@ -180,10 +180,6 @@ const Cart = () => {
                   </span>
                   <span className="text-white font-medium">€{shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Service Fee</span>
-                  <span className="text-white font-medium">€{serviceFee.toFixed(2)}</span>
-                </div>
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-border mb-6">

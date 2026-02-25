@@ -118,10 +118,19 @@ const CheckoutContent = () => {
 
             // Calculate per-seller amounts from the breakdown
             const sellerItemsTotal = group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-            const sellerPlatformFee = parseFloat((sellerItemsTotal * 0.035).toFixed(2))
-            const sellerServiceFee = parseFloat((sellerItemsTotal * 0.015 + (0.25 / sellerGroups.length)).toFixed(2))
             const sellerShipping = SHIPPING_PER_SELLER
-            const sellerNet = parseFloat((sellerItemsTotal - sellerPlatformFee + sellerShipping).toFixed(2))
+            
+            // 1. Buyer pays Items + Shipping
+            const sellerBuyerTotal = sellerItemsTotal + sellerShipping
+            
+            // 2. Stripe Fee absorbed by this seller's portion (approx 3.2%)
+            const sellerStripeFee = parseFloat((sellerBuyerTotal * 0.032).toFixed(2))
+            
+            // 3. TradeMonk commission (3.5% of ITEM COST ONLY)
+            const sellerPlatformFee = parseFloat((sellerItemsTotal * 0.035).toFixed(2))
+            
+            // 4. Final Seller Net (Item Cost + Shipping - TradeMonk Fee - Stripe Fee)
+            const sellerNet = parseFloat((sellerItemsTotal + sellerShipping - sellerPlatformFee - sellerStripeFee).toFixed(2))
 
             const orderResponse = await orderService.createOrder({
               items: group.items.map(item => ({
@@ -132,11 +141,11 @@ const CheckoutContent = () => {
                 quantity: item.quantity
               })),
               sellerId: group.sellerId,
-              totalAmount: sellerItemsTotal + sellerServiceFee + sellerShipping,
+              totalAmount: sellerBuyerTotal,
               feeBreakdown: {
                 itemsTotal: sellerItemsTotal,
                 shippingFee: sellerShipping,
-                serviceFee: sellerServiceFee,
+                stripeFee: sellerStripeFee,
                 platformFee: sellerPlatformFee,
                 sellerNet: sellerNet
               },
@@ -297,10 +306,6 @@ const CheckoutContent = () => {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium">Shipping ({sellerGroups.length} {sellerGroups.length === 1 ? 'package' : 'packages'})</span>
                   <span className="text-white font-bold">€{shipping.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground font-medium">Service Fee</span>
-                  <span className="text-white font-bold">€{serviceFee.toFixed(2)}</span>
                 </div>
               </div>
 
