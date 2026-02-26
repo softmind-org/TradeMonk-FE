@@ -11,7 +11,8 @@ import {
   Package, 
   User, 
   Heart, 
-  LogOut 
+  LogOut,
+  Store 
 } from 'lucide-react'
 
 const Header = () => {
@@ -147,10 +148,16 @@ const Header = () => {
                   </div>
 
                   <div className="border-t border-white/5 py-2">
-                    <Link to="/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link to="/" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <LayoutDashboard size={16} />
-                      Dashboard
+                      Buyer Dashboard
                     </Link>
+                    {user?.role === 'seller' && (
+                      <Link to="/seller/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors">
+                        <Store size={16} />
+                        Seller Dashboard
+                      </Link>
+                    )}
                     <Link to="/orders" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <Package size={16} />
                       My Orders

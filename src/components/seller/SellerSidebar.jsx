@@ -27,7 +27,7 @@ const SellerSidebar = ({ isOpen, onClose }) => {
   const isActive = (path) => location.pathname === path
 
   const handleExitSellerMode = () => {
-    logout()
+    navigate('/')
   }
 
   return (
