@@ -28,7 +28,9 @@ const Login = () => {
             loginContext(user, accessToken)
             
             // Redirect based on role
-            if (user.role === 'seller') {
+            if (user.role === 'admin') {
+                navigate('/admin/dashboard')
+            } else if (user.role === 'seller') {
                 navigate('/seller/dashboard')
             } else {
                 navigate('/')

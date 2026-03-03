@@ -31,7 +31,7 @@ const Modal = () => {
         <div
           role="dialog"
           aria-modal="true"
-          className="w-full rounded-2xl bg-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+          className="w-full rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
           style={{ maxWidth: width ? `${width}px` : "540px" }}
           onClick={(e) => e.stopPropagation()}
         >

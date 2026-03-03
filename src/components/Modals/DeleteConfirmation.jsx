@@ -1,7 +1,7 @@
 import { AlertTriangle } from 'lucide-react'
 
 const DeleteConfirmation = ({ listing, onConfirm, onCancel }) => (
-  <div className="flex flex-col items-center gap-4 p-6 text-center">
+  <div className="flex flex-col items-center gap-4 p-6 text-center bg-white rounded-2xl">
     <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
       <AlertTriangle size={28} className="text-red-500" />
     </div>

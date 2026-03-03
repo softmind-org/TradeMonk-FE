@@ -3,7 +3,7 @@
  * Defines all application routes
  */
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { MainLayout, AuthLayout, SellerLayout } from '@layouts'
+import { MainLayout, AuthLayout, SellerLayout, AdminLayout } from '@layouts'
 import { 
   HomePage, 
   NotFoundPage,
@@ -21,7 +21,10 @@ import {
   ListingDetail,
   SalesOrders,
   Payouts,
-  StoreSettings
+  StoreSettings,
+  AdminOverview,
+  AdminCategories,
+  AdminOrders
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -48,7 +51,7 @@ export const router = createBrowserRouter([
       {
         path: '/cart',
         element: (
-          <ProtectedRoute allowedRoles={['buyer']}>
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
             <Cart />
           </ProtectedRoute>
         ),
@@ -56,7 +59,7 @@ export const router = createBrowserRouter([
       {
         path: '/orders',
         element: (
-          <ProtectedRoute allowedRoles={['buyer']}>
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
             <OrderHistory />
           </ProtectedRoute>
         ),
@@ -64,7 +67,7 @@ export const router = createBrowserRouter([
       {
         path: '/checkout',
         element: (
-          <ProtectedRoute allowedRoles={['buyer']}>
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
             <Checkout />
           </ProtectedRoute>
         ),
@@ -72,7 +75,7 @@ export const router = createBrowserRouter([
       {
         path: '/order-complete',
         element: (
-          <ProtectedRoute allowedRoles={['buyer']}>
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
             <OrderComplete />
           </ProtectedRoute>
         ),
@@ -125,6 +128,34 @@ export const router = createBrowserRouter([
         path: 'settings',
         element: <StoreSettings />,
       },
+    ],
+  },
+
+  // ─── Protected Admin Routes ───
+  {
+    path: '/admin',
+    element: (
+      <ProtectedRoute allowedRoles={['admin']}>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+      {
+        path: 'dashboard',
+        element: <AdminOverview />,
+      },
+      // Placeholder routes for sidebar links
+      { path: 'users', element: <AdminOverview /> },
+      { path: 'sellers', element: <AdminOverview /> },
+      { path: 'categories', element: <AdminCategories /> },
+      { path: 'listings', element: <AdminOverview /> },
+      { path: 'orders', element: <AdminOrders /> },
+      { path: 'payments', element: <AdminOverview /> },
+      { path: 'settings', element: <AdminOverview /> },
     ],
   },
 

@@ -12,7 +12,8 @@ import {
   User, 
   Heart, 
   LogOut,
-  Store 
+  Store,
+  Shield
 } from 'lucide-react'
 
 const Header = () => {
@@ -152,6 +153,12 @@ const Header = () => {
                       <LayoutDashboard size={16} />
                       Buyer Dashboard
                     </Link>
+                    {user?.role === 'admin' && (
+                      <Link to="/admin/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors">
+                        <Shield size={16} />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     {user?.role === 'seller' && (
                       <Link to="/seller/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors">
                         <Store size={16} />

@@ -47,6 +47,15 @@ export const orderService = {
      */
     updateOrderStatus: async (orderId, data) => {
         return api.patch(`/orders/${orderId}/status`, data);
+    },
+
+    // --- ADMIN METHODS ---
+    /**
+     * Get all orders (admin only)
+     * @returns {Promise<Object>}
+     */
+    getAllOrders: async () => {
+        return api.get('/orders/all');
     }
 };
 
