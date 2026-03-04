@@ -24,7 +24,9 @@ import {
   StoreSettings,
   AdminOverview,
   AdminCategories,
-  AdminOrders
+  AdminOrders,
+  AdminUsers,
+  AdminUserDetail
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -149,8 +151,9 @@ export const router = createBrowserRouter([
         element: <AdminOverview />,
       },
       // Placeholder routes for sidebar links
-      { path: 'users', element: <AdminOverview /> },
-      { path: 'sellers', element: <AdminOverview /> },
+      { path: 'dashboard', element: <AdminOverview /> },
+      { path: 'users', element: <AdminUsers /> },
+      { path: 'users/:id', element: <AdminUserDetail /> },
       { path: 'categories', element: <AdminCategories /> },
       { path: 'listings', element: <AdminOverview /> },
       { path: 'orders', element: <AdminOrders /> },
