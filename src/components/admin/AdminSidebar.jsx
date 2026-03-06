@@ -10,10 +10,13 @@ import {
   Settings, 
   LogOut 
 } from 'lucide-react'
+import { useAuth } from '@/context'
+import { authService } from '@/services/authService'
 
 const AdminSidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { logout: contextLogout } = useAuth()
 
   const links = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
@@ -28,8 +31,14 @@ const AdminSidebar = ({ isOpen, onClose }) => {
 
   const isActive = (path) => location.pathname === path
 
-  const handleExitAdminMode = () => {
-    navigate('/')
+  const handleExitAdminMode = async () => {
+    try {
+      await authService.logout()
+    } catch (e) {
+      console.error('Logout API failed:', e)
+    }
+    contextLogout()
+    navigate('/login', { replace: true })
   }
 
   return (

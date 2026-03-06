@@ -26,7 +26,11 @@ import {
   AdminCategories,
   AdminOrders,
   AdminUsers,
-  AdminUserDetail
+  AdminUserDetail,
+  AdminListings,
+  AdminListingDetail,
+  AdminSellers,
+  AdminSellerDetail
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -154,8 +158,11 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <AdminOverview /> },
       { path: 'users', element: <AdminUsers /> },
       { path: 'users/:id', element: <AdminUserDetail /> },
+      { path: 'sellers', element: <AdminSellers /> },
+      { path: 'sellers/:id', element: <AdminSellerDetail /> },
       { path: 'categories', element: <AdminCategories /> },
-      { path: 'listings', element: <AdminOverview /> },
+      { path: 'listings', element: <AdminListings /> },
+      { path: 'listings/:id', element: <AdminListingDetail /> },
       { path: 'orders', element: <AdminOrders /> },
       { path: 'payments', element: <AdminOverview /> },
       { path: 'settings', element: <AdminOverview /> },

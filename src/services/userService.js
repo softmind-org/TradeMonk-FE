@@ -31,6 +31,34 @@ export const userService = {
     toggleStatus: async (userId, status) => {
         return api.patch(`/users/${userId}/status`, { status })
     },
+
+    // --- SELLER ADMIN METHODS ---
+    /**
+     * Get all sellers with stats (admin only)
+     * @returns {Promise<Object>}
+     */
+    getSellers: async () => {
+        return api.get('/users/sellers')
+    },
+
+    /**
+     * Get seller detail with full stats (admin only)
+     * @param {string} sellerId
+     * @returns {Promise<Object>}
+     */
+    getSellerDetail: async (sellerId) => {
+        return api.get(`/users/sellers/${sellerId}`)
+    },
+
+    /**
+     * Freeze/unfreeze seller account (admin only)
+     * @param {string} sellerId
+     * @param {string} status - 'active' | 'suspended'
+     * @returns {Promise<Object>}
+     */
+    freezeSeller: async (sellerId, status) => {
+        return api.patch(`/users/${sellerId}/status`, { status })
+    },
 }
 
 export default userService

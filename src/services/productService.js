@@ -97,7 +97,16 @@ export const productService = {
      */
     deleteProduct: async (productId) => {
         return api.delete(`/products/${productId}`)
-    }
+    },
+
+    // --- ADMIN METHODS ---
+    /**
+     * Get all listings across all sellers (admin only)
+     * @returns {Promise<Object>} - { success, data: [...products] }
+     */
+    getAllListings: async () => {
+        return api.get('/products/all')
+    },
 }
 
 export default productService
