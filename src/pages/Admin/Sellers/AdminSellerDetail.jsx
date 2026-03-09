@@ -104,6 +104,7 @@ const AdminSellerDetail = () => {
 
 
 
+
         <div className="lg:col-span-4 space-y-6">
           <div
             className="rounded-2xl p-8 flex flex-col items-center border border-white/5 relative overflow-hidden"
