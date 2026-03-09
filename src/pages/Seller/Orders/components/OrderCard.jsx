@@ -1,8 +1,13 @@
-import { Package, Truck, CheckCircle, Clock } from 'lucide-react'
+import { useState } from 'react'
+import { Package, Truck, Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { pokemonLogo } from '@assets'
+import orderService from '@/services/orderService'
+import toast from 'react-hot-toast'
 
 const OrderCard = ({ order, onUpdateStatus }) => {
+  const [isDownloading, setIsDownloading] = useState(false)
+
   const { 
     _id,
     orderNumber,
@@ -43,6 +48,27 @@ const OrderCard = ({ order, onUpdateStatus }) => {
     catch { serverBase = apiBase.split('/api')[0] }
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     return `${serverBase}${cleanPath}`
+  }
+
+  const handleDownloadInvoice = async () => {
+    try {
+      setIsDownloading(true)
+      const blob = await orderService.downloadInvoice(_id)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice_${orderNumber || _id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success('Invoice downloaded successfully')
+    } catch (error) {
+      console.error('Failed to download invoice:', error)
+      toast.error('Failed to download invoice')
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -94,6 +120,17 @@ const OrderCard = ({ order, onUpdateStatus }) => {
                Mark as Shipped
              </Button>
            )}
+
+           <Button 
+              onClick={handleDownloadInvoice}
+              disabled={isDownloading}
+              variant="outline"
+              className="border-white/10 hover:bg-white/5 text-white font-bold text-xs px-3 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors"
+              title="Download Order Invoice (PDF)"
+           >
+             {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+             <span className="hidden sm:inline">Invoice</span>
+           </Button>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@components/ui'
-import { ArrowRight, Package } from 'lucide-react'
+import { ArrowRight, Package, Download, Loader2 } from 'lucide-react'
 import { pokemonLogo } from '@assets'
 import orderService from '@/services/orderService'
 
@@ -44,6 +44,7 @@ const formatImageUrl = (path) => {
 
 /** Single order card */
 const OrderCard = ({ order }) => {
+  const [isDownloading, setIsDownloading] = useState(false)
   const statusConfig = getStatusConfig(order.orderStatus)
   const progress = getProgress(statusConfig.step)
 
@@ -55,6 +56,28 @@ const OrderCard = ({ order }) => {
   const sc = statusColors[statusConfig.color] || statusColors.blue
 
   const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0)
+
+  const handleDownloadInvoice = async () => {
+    try {
+      setIsDownloading(true)
+      const blob = await orderService.downloadInvoice(order._id)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice_${order.orderNumber || order._id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Failed to download invoice:', error)
+      // Assuming toast exists, wait, we don't have toast imported here. Let's import it if we want.
+      // But we can just fail silently or alert.
+      alert('Failed to download invoice')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-6 md:p-8 hover:border-white/10 transition-colors">
@@ -98,6 +121,16 @@ const OrderCard = ({ order }) => {
               {statusConfig.label}
             </span>
           </div>
+
+          <button
+            onClick={handleDownloadInvoice}
+            disabled={isDownloading}
+             className="bg-transparent border border-white/10 hover:bg-white/5 text-white font-bold text-xs px-3 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors rounded-lg"
+             title="Download Order Invoice (PDF)"
+          >
+            {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            <span className="hidden sm:inline">Invoice</span>
+          </button>
         </div>
       </div>
 

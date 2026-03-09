@@ -40,6 +40,18 @@ export const orderService = {
     },
 
     /**
+     * Download monthly sales report CSV
+     * @param {number|string} month (1-12)
+     * @param {number|string} year 
+     * @returns {Promise<Blob>}
+     */
+    downloadCsvReport: async (month, year) => {
+        return api.get(`/orders/seller/report/csv?month=${month}&year=${year}`, {
+            responseType: 'blob'
+        });
+    },
+
+    /**
      * Update order status (for sellers)
      * @param {string} orderId 
      * @param {Object} data { status, trackingNumber, shippingCarrier }
@@ -56,6 +68,17 @@ export const orderService = {
      */
     getAllOrders: async () => {
         return api.get('/orders/all');
+    },
+
+    /**
+     * Download order invoice as PDF
+     * @param {string} orderId 
+     * @returns {Promise<Blob>}
+     */
+    downloadInvoice: async (orderId) => {
+        return api.get(`/orders/${orderId}/invoice`, {
+            responseType: 'blob'
+        });
     }
 };
 
