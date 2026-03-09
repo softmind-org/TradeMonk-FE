@@ -100,6 +100,10 @@ const AdminSellerDetail = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ── LEFT: Profile Card ── */}
+                {/* ── LEFT: Profile Card ── */}
+
+
+
         <div className="lg:col-span-4 space-y-6">
           <div
             className="rounded-2xl p-8 flex flex-col items-center border border-white/5 relative overflow-hidden"
