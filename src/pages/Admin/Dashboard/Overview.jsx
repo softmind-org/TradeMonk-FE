@@ -1,5 +1,8 @@
-import { Users, Store, Package, ShoppingBag, TrendingUp, Zap, ChevronRight, BarChart3, ShieldCheck, Mail, AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, Store, Package, ShoppingBag, TrendingUp, Zap, ChevronRight, BarChart3, ShieldCheck, Mail, AlertTriangle, Settings, Power } from 'lucide-react'
 import { Button } from '@components/ui'
+import settingService from '@/services/settingService'
+import toast from 'react-hot-toast'
 
 const AdminOverview = () => {
   const kpis = [
@@ -16,6 +19,38 @@ const AdminOverview = () => {
     { id: 3, title: 'Order #TM-99201 completed by Ash K.', time: '45M AGO', icon: ShieldCheck, type: 'success' },
     { id: 4, title: 'User Gary O. suspended for suspicious bidding', time: '2H AGO', icon: AlertTriangle, type: 'warning' },
   ]
+
+  const [marketplaceMode, setMarketplaceMode] = useState('preparation')
+  const [isToggling, setIsToggling] = useState(false)
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await settingService.getSettings()
+        if (res.success && res.data?.marketplaceMode) {
+          setMarketplaceMode(res.data.marketplaceMode)
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings', err)
+      }
+    }
+    fetchSettings()
+  }, [])
+
+  const handleToggleMode = async () => {
+    try {
+      setIsToggling(true)
+      const newMode = marketplaceMode === 'live' ? 'preparation' : 'live'
+      await settingService.updateSetting('marketplaceMode', newMode)
+      setMarketplaceMode(newMode)
+      toast.success(`Marketplace is now ${newMode === 'live' ? 'LIVE' : 'in PREPARATION mode'}`)
+    } catch (err) {
+      console.error('Failed to toggle mode:', err)
+      toast.error('Failed to toggle marketplace mode')
+    } finally {
+      setIsToggling(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -35,6 +70,35 @@ const AdminOverview = () => {
               </div>
             )
           })}
+       </div>
+
+       {/* Platform Controls */}
+       <div className="bg-[#111C2E] rounded-2xl border border-white/5 p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+             <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${marketplaceMode === 'live' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-orange-500/10 border-orange-500/20 text-orange-400'}`}>
+                <Power size={24} />
+             </div>
+             <div>
+                <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                   Marketplace Status: 
+                   <span className={marketplaceMode === 'live' ? 'text-emerald-400 uppercase' : 'text-orange-400 uppercase'}>
+                      {marketplaceMode}
+                   </span>
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                   {marketplaceMode === 'live' 
+                     ? 'Live mode. Buyers can browse, add to cart, and checkout seamlessly.' 
+                     : 'Preparation mode. Sellers can onboard and list items, but buyer checkout is disabled.'}
+                </p>
+             </div>
+          </div>
+          <Button 
+            onClick={handleToggleMode}
+            disabled={isToggling}
+            className={`font-bold px-6 py-3 whitespace-nowrap transition-colors border ${marketplaceMode === 'live' ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-orange-500/20' : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'}`}
+          >
+             {isToggling ? 'Updating...' : (marketplaceMode === 'live' ? 'Switch to Preparation' : 'Launch Live Mode')}
+          </Button>
        </div>
 
        {/* Detailed Layout */}

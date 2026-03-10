@@ -3,12 +3,14 @@
  * Displays cart items grouped by seller with order summary
  * Only accessible to logged-in users
  */
+import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Button } from '@components/ui'
 import { useCart, useAuth } from '@context'
-import { ArrowLeft, ShieldCheck, ArrowRight, Store } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, ArrowRight, Store, AlertCircle } from 'lucide-react'
 import CartItem from './CartItem'
 import { pokemonLogo } from '@assets'
+import settingService from '@/services/settingService'
 
 const SHIPPING_PER_SELLER = 15.00
 
@@ -28,6 +30,25 @@ const Cart = () => {
     removeFromCart,
     isLoading: cartLoading
   } = useCart()
+
+  const [marketplaceMode, setMarketplaceMode] = useState('preparation')
+  const [configLoading, setConfigLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await settingService.getSettings()
+        if (res.success && res.data?.marketplaceMode) {
+          setMarketplaceMode(res.data.marketplaceMode)
+        }
+      } catch (err) {
+        console.error('Failed to load settings', err)
+      } finally {
+        setConfigLoading(false)
+      }
+    }
+    fetchSettings()
+  }, [])
 
   const formatImageUrl = (path) => {
     if (!path || path === '') return pokemonLogo
@@ -50,7 +71,7 @@ const Cart = () => {
     return <Navigate to="/login" state={{ from: '/cart' }} replace />
   }
 
-  if (authLoading || cartLoading) {
+  if (authLoading || cartLoading || configLoading) {
     return (
       <div className="bg-background min-h-screen py-8 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
@@ -187,9 +208,22 @@ const Cart = () => {
                 <span className="text-secondary text-2xl font-bold">€{total.toFixed(2)}</span>
               </div>
 
+              {marketplaceMode === 'preparation' ? (
+                <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mb-4 text-center">
+                  <div className="flex justify-center mb-2">
+                    <AlertCircle className="text-orange-500" size={20} />
+                  </div>
+                  <h3 className="text-orange-500 font-bold text-sm mb-1 uppercase tracking-wider">Preparation Mode</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    The marketplace is currently in preparation mode. Sellers are onboarding but checkout is temporarily disabled.
+                  </p>
+                </div>
+              ) : null}
+
               <Button 
                 onClick={() => navigate('/checkout')}
-                className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer"
+                disabled={marketplaceMode === 'preparation'}
+                className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-secondary"
               >
                 Proceed to Checkout
                 <ArrowRight size={16} />
