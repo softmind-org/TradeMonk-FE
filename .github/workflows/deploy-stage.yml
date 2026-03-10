@@ -18,6 +18,11 @@ jobs:
           # Copy .env file from your env path to project root
           cp /var/www/tradeMonk-envs/TradeMonk-FE-Stage-ENV .env
 
+      - name: Clean old cache
+        run: |
+          echo "Removing old node_modules and dist folder for a fresh build"
+          rm -rf node_modules dist
+
       - name: Install dependencies
         run: npm install
 
