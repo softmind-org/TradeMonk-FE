@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   PaymentElement,
@@ -13,6 +13,7 @@ import { useFormik } from 'formik'
 import { checkoutSchema } from '@/schemas/checkout-schema'
 import stripeService from '@/services/stripeService'
 import orderService from '@/services/orderService'
+import shippingService from '@/services/shippingService'
 
 const SHIPPING_PER_SELLER = 15.00
 
@@ -39,13 +40,19 @@ const CheckoutContent = () => {
   const [errorMessage, setErrorMessage] = useState(null)
   const [processingStatus, setProcessingStatus] = useState('')
 
+  const [shippingOptions, setShippingOptions] = useState({})
+  const [selectedShipping, setSelectedShipping] = useState({})
+  const [isLoadingShipping, setIsLoadingShipping] = useState(false)
+  const [shippingError, setShippingError] = useState(null)
+
   const formik = useFormik({
     initialValues: {
       fullName: user?.name || '',
       email: user?.email || '',
       address: '',
       city: '',
-      zipCode: ''
+      zipCode: '',
+      country: ''
     },
     validationSchema: checkoutSchema,
     onSubmit: async (values) => {
@@ -69,7 +76,8 @@ const CheckoutContent = () => {
 
           // 2. Create ONE payment intent for the ENTIRE cart (all sellers)
           setProcessingStatus('Creating payment...')
-          const response = await stripeService.createPaymentIntent()
+          const selectedShippingTotal = Object.values(selectedShipping).reduce((sum, method) => sum + (method?.price || 0), 0)
+          const response = await stripeService.createPaymentIntent({ shippingTotal: selectedShippingTotal })
 
           if (!response?.success) {
             throw new Error(response?.message || 'Failed to initialize payment')
@@ -118,7 +126,8 @@ const CheckoutContent = () => {
 
             // Calculate per-seller amounts from the breakdown
             const sellerItemsTotal = group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-            const sellerShipping = SHIPPING_PER_SELLER
+            const sellerShippingMethod = selectedShipping[group.sellerId]
+            const sellerShipping = sellerShippingMethod ? sellerShippingMethod.price : 0
             
             // 1. Buyer pays Items + Shipping
             const sellerBuyerTotal = sellerItemsTotal + sellerShipping
@@ -153,8 +162,12 @@ const CheckoutContent = () => {
                 fullName: values.fullName,
                 address: values.address,
                 city: values.city,
-                zipCode: values.zipCode
+                zipCode: values.zipCode,
+                country: values.country
               },
+              shippingMethodName: sellerShippingMethod?.name || 'Standard Shipping',
+              shippingMethodId: sellerShippingMethod?.id || null,
+              shippingPrice: sellerShipping,
               paymentIntentId: paymentIntent.id
             })
 
@@ -186,6 +199,43 @@ const CheckoutContent = () => {
         }
     }
   })
+
+  // Fetch automatic shipping estimates
+  const { values, errors } = formik
+  useEffect(() => {
+    const fetchShipping = async () => {
+      if (values.country && values.country.length === 2 && !errors.country) {
+        setIsLoadingShipping(true)
+        setShippingError(null)
+        try {
+          const payloadGroups = sellerGroups.map(group => ({
+             sellerId: group.sellerId,
+             itemsTotal: group.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+          }))
+          const res = await shippingService.getEstimates(values.country, payloadGroups)
+          if (res?.success && res.data) {
+             setSelectedShipping(res.data)
+             
+             // Check if any estimate failed to generate
+             const hasNulls = Object.values(res.data).some(est => est === null)
+             if (hasNulls) {
+                 setShippingError("Shipping is unavailable to this destination for one or more packages.")
+             }
+          }
+        } catch (err) {
+          setShippingError('Failed to calculate shipping rates. Try another country.')
+        } finally {
+          setIsLoadingShipping(false)
+        }
+      } else {
+        setSelectedShipping({})
+      }
+    }
+    fetchShipping()
+  }, [values.country, errors.country, sellerGroups])
+
+  const dynamicShippingTotal = Object.values(selectedShipping).reduce((sum, method) => sum + (method?.price || 0), 0)
+  const dynamicGrandTotal = subtotal + dynamicShippingTotal
 
   return (
     <div className="bg-background min-h-screen py-8 px-4 md:px-8">
@@ -227,6 +277,10 @@ const CheckoutContent = () => {
                         <label htmlFor="zipCode" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Zip / Postal Code</label>
                         <Input id="zipCode" name="zipCode" value={formik.values.zipCode} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.zipCode && formik.errors.zipCode} placeholder="94103" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
                     </div>
+                    </div>
+                    <div>
+                        <label htmlFor="country" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Country (ISO-2)</label>
+                        <Input id="country" name="country" value={formik.values.country} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.country && formik.errors.country} placeholder="NL, DE, GB" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" maxLength={2} />
                     </div>
                 </div>
                 </div>
@@ -290,9 +344,21 @@ const CheckoutContent = () => {
                         </div>
                       ))}
                     </div>
-                    <div className="flex items-center justify-between px-3 py-2 bg-[#0B1220]/50 rounded-lg border border-white/5">
-                      <span className="text-[10px] text-muted-foreground font-medium">Insured Shipping</span>
-                      <span className="text-white text-xs font-bold">€{SHIPPING_PER_SELLER.toFixed(2)}</span>
+                    <div className="flex items-center justify-between px-3 py-2 bg-[#0B1220]/50 rounded-lg border border-white/5 mt-2">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {isLoadingShipping 
+                          ? "Calculating..." : 
+                          selectedShipping[group.sellerId] 
+                            ? `${selectedShipping[group.sellerId].name} (${selectedShipping[group.sellerId].carrier})`
+                            : "Enter valid destination country to estimate"}
+                      </span>
+                      <span className="text-white text-xs font-bold">
+                        {isLoadingShipping 
+                          ? "—" : 
+                          selectedShipping[group.sellerId] 
+                            ? `€${selectedShipping[group.sellerId].price.toFixed(2)}`
+                            : "—"}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -305,26 +371,35 @@ const CheckoutContent = () => {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground font-medium">Shipping ({sellerGroups.length} {sellerGroups.length === 1 ? 'package' : 'packages'})</span>
-                  <span className="text-white font-bold">€{shipping.toFixed(2)}</span>
+                  <span className="text-white font-bold">
+                      {values.country?.length === 2 && !isLoadingShipping ? `€${dynamicShippingTotal.toFixed(2)}` : 'Pending'}
+                  </span>
                 </div>
+                {shippingError && (
+                  <div className="text-xs text-red-500 font-medium">
+                      {shippingError}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-4 mt-4 border-t border-white/10 mb-8">
                 <span className="text-white font-bold text-lg">Grand Total</span>
-                <span className="text-[#D4A017] text-2xl font-bold">€{total.toFixed(2)}</span>
+                <span className="text-[#D4A017] text-2xl font-bold">
+                    {values.country?.length === 2 && !isLoadingShipping ? `€${dynamicGrandTotal.toFixed(2)}` : `€${total.toFixed(2)}`}
+                </span>
               </div>
               
               <Button
                 onClick={() => formik.handleSubmit()}
-                disabled={!stripe || isProcessing}
+                disabled={!stripe || isProcessing || isLoadingShipping || shippingError}
                 className="w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 type="button"
               >
-                {isProcessing
+                {isProcessing || isLoadingShipping
                   ? (processingStatus || 'Processing...')
                   : `Authorize Payment — ${sellerGroups.length} ${sellerGroups.length === 1 ? 'Package' : 'Packages'}`
                 }
-                {!isProcessing && <ArrowRight size={18} />}
+                {!isProcessing && !isLoadingShipping && <ArrowRight size={18} />}
               </Button>
               
               {Object.keys(formik.errors).length > 0 && formik.submitCount > 0 && (

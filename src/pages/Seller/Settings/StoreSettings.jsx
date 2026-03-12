@@ -8,6 +8,8 @@ import {
   ConnectComponentsProvider,
   ConnectAccountOnboarding,
 } from '@stripe/react-connect-js'
+import userService from '@/services/userService'
+import WarehouseAddressForm from './components/WarehouseAddressForm'
 
 const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLIC_KEY
 
@@ -47,10 +49,22 @@ const StoreSettings = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Merchant Profile
-  const [storeName, setStoreName] = useState('John Alex')
-  const [storeDescription, setStoreDescription] = useState('Premium TCG collector and merchant specializing in near-mint rare singles.')
+  const [storeName, setStoreName] = useState('')
+  const [storeDescription, setStoreDescription] = useState('')
+  const [warehouseAddress, setWarehouseAddress] = useState({
+    contactName: '',
+    phone: '',
+    addressLine1: '',
+    city: '',
+    postalCode: '',
+    country: 'NL'
+  })
+  
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [isEditingWarehouse, setIsEditingWarehouse] = useState(false)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [profileMessage, setProfileMessage] = useState({ type: '', text: '' })
 
   // Stripe Connect State
   const [stripeStatus, setStripeStatus] = useState({
@@ -75,8 +89,9 @@ const StoreSettings = () => {
   const [stripeConnectInstance, setStripeConnectInstance] = useState(null)
   const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(false)
 
-  // Fetch Stripe account status on mount
+  // Fetch Profile and Stripe status on mount
   useEffect(() => {
+    fetchProfile()
     fetchStripeStatus()
 
     // Handle return from Stripe (for account-link fallback)
@@ -91,6 +106,21 @@ const StoreSettings = () => {
       setSearchParams({}, { replace: true })
     }
   }, [])
+
+  const fetchProfile = async () => {
+    try {
+      const res = await userService.getProfile()
+      if (res?.success && res.data) {
+        setStoreName(res.data.storeName || '')
+        // Store description if we ever add it to backend: setStoreDescription(res.data.storeDescription || '')
+        if (res.data.warehouseAddress) {
+          setWarehouseAddress(res.data.warehouseAddress)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+    }
+  }
 
   const fetchStripeStatus = async () => {
     try {
@@ -216,12 +246,37 @@ const StoreSettings = () => {
     fetchStripeStatus()
   }
 
-  const handleNameSave = () => {
-    setIsEditingName(false)
+  const handleNameSave = async () => {
+    try {
+      setIsSavingProfile(true)
+      await userService.updateProfile({ storeName: storeName })
+      setIsEditingName(false)
+      setProfileMessage({ type: 'success', text: 'Store name updated successfully' })
+    } catch (error) {
+      setProfileMessage({ type: 'error', text: 'Failed to update store name' })
+    } finally {
+      setIsSavingProfile(false)
+      setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000)
+    }
   }
 
-  const handleDescriptionSave = () => {
+  const handleDescriptionSave = async () => {
+    // Description isn't actively saved to backend yet in MVP, but we can close it
     setIsEditingDescription(false)
+  }
+
+  const handleWarehouseSave = async () => {
+    try {
+      setIsSavingProfile(true)
+      await userService.updateProfile({ warehouseAddress: warehouseAddress })
+      setIsEditingWarehouse(false)
+      setProfileMessage({ type: 'success', text: 'Warehouse address updated successfully' })
+    } catch (error) {
+      setProfileMessage({ type: 'error', text: 'Failed to update warehouse address' })
+    } finally {
+      setIsSavingProfile(false)
+      setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000)
+    }
   }
 
   // Render the payment section based on current step
@@ -473,6 +528,27 @@ const StoreSettings = () => {
         </div>
       )}
 
+      {/* Profile Messages Banner */}
+      {profileMessage.text && (
+        <div className={`flex items-center gap-3 p-4 rounded-xl animate-fade-in ${
+          profileMessage.type === 'success' 
+            ? 'bg-emerald-500/10 border border-emerald-500/20' 
+            : 'bg-red-500/10 border border-red-500/20'
+        }`}>
+          {profileMessage.type === 'success' ? (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          )}
+          <p className={`text-sm font-medium ${
+            profileMessage.type === 'success' ? 'text-emerald-300' : 'text-red-300'
+          }`}>{profileMessage.text}</p>
+          <button onClick={() => setProfileMessage({ type: '', text: '' })} className={`ml-auto ${
+            profileMessage.type === 'success' ? 'text-emerald-400/60 hover:text-emerald-400' : 'text-red-400/60 hover:text-red-400'
+          }`}>✕</button>
+        </div>
+      )}
+
       {/* Merchant Profile Section */}
       <div className="space-y-6">
         <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
@@ -553,7 +629,7 @@ const StoreSettings = () => {
                 </div>
               ) : (
                 <div className="flex items-start justify-between bg-[#0B1220] border border-white/10 rounded-lg px-4 py-3 gap-4">
-                  <p className="text-white text-sm leading-relaxed flex-1">{storeDescription}</p>
+                  <p className="text-white text-sm leading-relaxed flex-1">{storeDescription || 'Add a description to tell buyers about your store.'}</p>
                   <button
                     onClick={() => setIsEditingDescription(true)}
                     className="text-[#D4A017] hover:text-[#D4A017]/80 transition-colors flex-shrink-0"
@@ -566,6 +642,17 @@ const StoreSettings = () => {
           </div>
         </div>
       </div>
+
+      {/* Warehouse Address Section */}
+      <WarehouseAddressForm 
+         warehouseAddress={warehouseAddress}
+         setWarehouseAddress={setWarehouseAddress}
+         isEditingWarehouse={isEditingWarehouse}
+         setIsEditingWarehouse={setIsEditingWarehouse}
+         handleWarehouseSave={handleWarehouseSave}
+         isSavingProfile={isSavingProfile}
+         COUNTRIES={COUNTRIES}
+      />
 
       {/* Payment Payouts Section */}
       <div className="space-y-6">

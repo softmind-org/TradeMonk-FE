@@ -1,7 +1,5 @@
 /**
  * Cart Page
- * Displays cart items grouped by seller with order summary
- * Only accessible to logged-in users
  */
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
@@ -12,14 +10,13 @@ import CartItem from './CartItem'
 import { pokemonLogo } from '@assets'
 import settingService from '@/services/settingService'
 
-const SHIPPING_PER_SELLER = 15.00
-
 const Cart = () => {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { 
     items, 
     sellerGroups,
+    sellerShippingCosts,
     itemCount, 
     subtotal, 
     shipping, 
@@ -177,7 +174,9 @@ const Cart = () => {
                   <span className="text-xs text-muted-foreground font-medium">
                     Insured Shipping — Package {groupIdx + 1}
                   </span>
-                  <span className="text-white text-xs font-bold">€{SHIPPING_PER_SELLER.toFixed(2)}</span>
+                  <span className="text-white text-xs font-bold">
+                    €{(sellerShippingCosts[group.sellerId] ?? 0.00).toFixed(2)}
+                  </span>
                 </div>
               </div>
             ))}

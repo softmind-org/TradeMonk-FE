@@ -59,6 +59,24 @@ export const userService = {
     freezeSeller: async (sellerId, status) => {
         return api.patch(`/users/${sellerId}/status`, { status })
     },
+
+    // --- LOGGED IN USER PROFILE METHODS ---
+    /**
+     * Get logged in user profile
+     * @returns {Promise<Object>}
+     */
+    getProfile: async () => {
+        return api.get('/users/profile')
+    },
+
+    /**
+     * Update logged in user profile
+     * @param {Object} data - Profile data
+     * @returns {Promise<Object>}
+     */
+    updateProfile: async (data) => {
+        return api.put('/users/profile', data)
+    },
 }
 
 export default userService

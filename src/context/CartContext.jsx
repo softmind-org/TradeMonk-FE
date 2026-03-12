@@ -1,17 +1,19 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import cartService from '@/services/cartService'
+import shippingService from '@/services/shippingService'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
 
 const CART_STORAGE_KEY = 'trademonk_guest_cart'
-const SHIPPING_COST = 15.00 // Fixed shipping cost per seller
+const FALLBACK_SHIPPING_COST = 15.00 // Fallback if API fails
 const SERVICE_FEE_RATE = 0.015 // 1.5% Stripe processing fee
 const SERVICE_FEE_FIXED = 0.25 // €0.25 fixed per transaction
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([])
   const [sellerGroups, setSellerGroups] = useState([])
+  const [sellerShippingCosts, setSellerShippingCosts] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const { isAuthenticated, user } = useAuth()
 
@@ -251,9 +253,59 @@ export const CartProvider = ({ children }) => {
     return buildSellerGroups(items)
   }, [isAuthenticated, sellerGroups, items, buildSellerGroups])
 
+  // Fetch dynamic shipping costs from SendCloud when groups change
+  useEffect(() => {
+    const fetchShippingEstimates = async () => {
+      const newCosts = { ...sellerShippingCosts }
+      let hasChanges = false
+
+      for (const group of computedSellerGroups) {
+        if (newCosts[group.sellerId] === undefined) {
+          try {
+            // Fetch methods from SendCloud. We can assume DE to NL for default estimation if buyer country is unknown.
+            const res = await shippingService.getMethods('DE', 'NL', 500)
+            console.log("SendCloud response in CartContext:", res);
+            if (res?.success && res?.data?.length > 0) {
+              const methods = res.data
+              // Filter out ones with no price and pick cheapest
+              const validMethods = methods.filter(m => m.price != null && m.price !== 'NaN' && !isNaN(parseFloat(m.price)))
+              console.log("Valid SendCloud methods:", validMethods);
+              const cheapest = validMethods.length > 0 
+                ? Math.min(...validMethods.map(m => parseFloat(m.price))) 
+                : FALLBACK_SHIPPING_COST
+              console.log("Cheapest picked:", cheapest);
+              newCosts[group.sellerId] = cheapest
+            } else {
+              console.log("Sendcloud fallback triggered, invalid response format or empty:", res);
+              newCosts[group.sellerId] = FALLBACK_SHIPPING_COST
+            }
+          } catch (error) {
+            console.error('Failed to get shipping estimate:', error)
+            newCosts[group.sellerId] = FALLBACK_SHIPPING_COST
+          }
+          hasChanges = true
+        }
+      }
+
+      if (hasChanges) {
+        setSellerShippingCosts(newCosts)
+      }
+    }
+
+    if (computedSellerGroups.length > 0) {
+      fetchShippingEstimates()
+    } else if (Object.keys(sellerShippingCosts).length > 0) {
+      setSellerShippingCosts({}) // Clear if cart empty
+    }
+  }, [computedSellerGroups, sellerShippingCosts])
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = computedSellerGroups.length > 0 ? computedSellerGroups.length * SHIPPING_COST : 0
+  
+  // Dynamic total shipping cost based on the fetched estimates
+  const shipping = computedSellerGroups.reduce((acc, group) => {
+    return acc + (sellerShippingCosts[group.sellerId] ?? 0)
+  }, 0)
   
   // Service fee is now absorbed by the seller/platform, so the buyer doesn't pay it directly
   const serviceFee = 0
@@ -272,6 +324,7 @@ export const CartProvider = ({ children }) => {
   const value = {
     items,
     sellerGroups: computedSellerGroups,
+    sellerShippingCosts,
     itemCount,
     subtotal,
     shipping,

@@ -112,6 +112,17 @@ const OrderCard = ({ order }) => {
         </div>
 
         <div className="flex items-center gap-4">
+          {order.trackingUrl && (
+            <a
+              href={order.trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#D4A017] text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 hover:text-white transition-colors mr-2"
+              title={`Track: ${order.trackingNumber || 'Package'}`}
+            >
+              Track Package
+            </a>
+          )}
           <div className={`px-4 py-1.5 rounded-full ${sc.bg} border ${sc.border} flex items-center gap-2`}>
             <span className="relative flex h-2 w-2">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.ping} opacity-75`}></span>
