@@ -34,8 +34,34 @@ export const registerSchema = Yup.object({
         .matches(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
     email: emailValidation,
     password: passwordValidation,
-    // role: Yup.string().oneOf(['buyer', 'seller'], 'Invalid role').required('Role is required'), // Original auth-schema had role, but register-schema.js DID NOT. 
-    // Checking existing register-schema.js: It did NOT have role. I will stick to the explicitly used register-schema.js to not break anything. 
+    acceptedTerms: Yup.boolean()
+        .oneOf([true], "You must accept the Terms & Conditions")
+        .required("You must accept the Terms & Conditions"),
+    sellerType: Yup.string().when('role', {
+        is: 'seller',
+        then: (schema) => schema.oneOf(['private', 'professional'], 'Invalid seller type').required('Seller type is required'),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    businessName: Yup.string().when(['role', 'sellerType'], {
+        is: (role, sellerType) => role === 'seller' && sellerType === 'professional',
+        then: (schema) => schema.required('Business name is required').trim(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    registrationNumber: Yup.string().when(['role', 'sellerType'], {
+        is: (role, sellerType) => role === 'seller' && sellerType === 'professional',
+        then: (schema) => schema.required('Registration number is required').trim(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    vatNumber: Yup.string().when(['role', 'sellerType'], {
+        is: (role, sellerType) => role === 'seller' && sellerType === 'professional',
+        then: (schema) => schema.required('VAT number is required').trim(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    businessAddress: Yup.string().when(['role', 'sellerType'], {
+        is: (role, sellerType) => role === 'seller' && sellerType === 'professional',
+        then: (schema) => schema.required('Business address is required').trim(),
+        otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 // Forgot Password Schemas

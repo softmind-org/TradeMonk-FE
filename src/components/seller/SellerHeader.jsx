@@ -1,6 +1,36 @@
-import { Search, Bell, Menu } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Search, Bell, Menu, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { useAuth } from '@/context'
+import { useLogout } from '@/hooks/useLogout'
+import { Link } from 'react-router-dom'
 
 const SellerHeader = ({ onMenuClick }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const { user } = useAuth()
+  const { mutate: logout } = useLogout()
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const getUserInitial = () => {
+    if (!user) return 'S';
+    return (user.fullName || user.email || 'S').charAt(0).toUpperCase();
+  }
+
+  const handleLogout = () => {
+    logout()
+    setIsDropdownOpen(false)
+  }
+
   return (
     <header className="h-20 bg-[#0B1220] border-b border-white/5 flex items-center justify-between px-6 md:px-8 sticky top-0 z-30">
         <div className="flex items-center gap-4">
@@ -35,9 +65,59 @@ const SellerHeader = ({ onMenuClick }) => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#D4A017]"></span>
             </button>
 
-            {/* Avatar */}
-            <div className="w-10 h-10 rounded-lg bg-[#D4A017] flex items-center justify-center text-black font-bold cursor-pointer hover:opacity-90 transition-opacity">
-                J
+            {/* Avatar Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-10 h-10 rounded-lg bg-[#D4A017] flex items-center justify-center text-black font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                >
+                    {getUserInitial()}
+                </button>
+
+                {isDropdownOpen && (
+                    <div 
+                      className="absolute top-full right-0 mt-3 w-56 rounded-xl backdrop-blur-md z-50 overflow-hidden shadow-2xl border border-white/5"
+                      style={{ backgroundColor: '#1E293BEE' }}
+                    >
+                        <div className="p-4 border-b border-white/5">
+                            <p className="text-[#94A3B8] text-[10px] font-bold tracking-wider uppercase mb-0.5">
+                                MERCHANT
+                            </p>
+                            <p className="text-white font-bold text-sm truncate">
+                                {user?.fullName || user?.email}
+                            </p>
+                        </div>
+
+                        <div className="py-2">
+                            <Link 
+                              to="/seller/profile" 
+                              onClick={() => setIsDropdownOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
+                            >
+                                <User size={16} />
+                                Profile Page
+                            </Link>
+                            <Link 
+                              to="/" 
+                              onClick={() => setIsDropdownOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
+                            >
+                                <LayoutDashboard size={16} />
+                                Buyer Side
+                            </Link>
+                        </div>
+
+                        <div className="border-t border-white/5 py-2">
+                            <button 
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-[#FF5D5D] hover:bg-[#FF5D5D10] text-xs font-bold transition-colors text-left"
+                            >
+                                <LogOut size={16} />
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     </header>
@@ -45,3 +125,4 @@ const SellerHeader = ({ onMenuClick }) => {
 }
 
 export default SellerHeader
+

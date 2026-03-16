@@ -51,8 +51,9 @@ const Header = () => {
   // Get user initial for avatar
   const getUserInitial = () => {
     if (!user) return 'U';
-    // Try name first, then email
-    return (user.name || user.email || 'U').charAt(0).toUpperCase();
+    // Use first letter of fullName if available, else email
+    const name = user.fullName || user.email || 'U';
+    return name.charAt(0).toUpperCase();
   }
 
   return (
@@ -141,7 +142,7 @@ const Header = () => {
                 >
                   <div className="p-5">
                     <p className="text-[#94A3B8] text-[10px] font-bold tracking-wider uppercase mb-1">
-                      COLLECTOR
+                        {user?.role === 'seller' ? 'MERCHANT' : 'COLLECTOR'}
                     </p>
                     <p className="text-white font-bold text-sm truncate">
                       {user?.fullName || user?.email}
@@ -149,34 +150,40 @@ const Header = () => {
                   </div>
 
                   <div className="border-t border-white/5 py-2">
-                    <Link to="/" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link 
+                      to={user?.role === 'seller' ? '/seller/dashboard' : '/'} 
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors"
+                    >
                       <LayoutDashboard size={16} />
-                      Buyer Dashboard
+                      {user?.role === 'seller' ? 'Seller Dashboard' : 'Buyer Dashboard'}
                     </Link>
                     {user?.role === 'admin' && (
-                      <Link to="/admin/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors">
+                      <Link 
+                        to="/admin/dashboard" 
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors"
+                      >
                         <Shield size={16} />
                         Admin Dashboard
                       </Link>
                     )}
-                    {user?.role === 'seller' && (
-                      <Link to="/seller/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors">
-                        <Store size={16} />
-                        Seller Dashboard
-                      </Link>
-                    )}
-                    <Link to="/orders" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link to="/orders" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <Package size={16} />
                       My Orders
                     </Link>
-                    <Link to="/profile" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link 
+                      to={user?.role === 'seller' ? '/seller/profile' : '/profile'} 
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors"
+                    >
                       <User size={16} />
                       Profile
                     </Link>
-                    <Link to="/favorites" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    {/* <Link to="/favorites" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <Heart size={16} />
                       My Favorites
-                    </Link>
+                    </Link> */}
                   </div>
 
                   <div className="border-t border-white/5 py-2">

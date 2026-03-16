@@ -30,7 +30,12 @@ import {
   AdminListings,
   AdminListingDetail,
   AdminSellers,
-  AdminSellerDetail
+  AdminSellerDetail,
+  TermsSettings,
+  TermsPage,
+  Profile,
+  BuyerProfile,
+  SellerProfile
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -86,7 +91,21 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
+            <BuyerProfile />
+          </ProtectedRoute>
+        ),
+      },
     ],
+  },
+
+  // ─── Public Terms & Conditions Page ───
+  {
+    path: '/terms/:type',
+    element: <TermsPage />,
   },
 
   // ─── Protected Seller Routes ───
@@ -105,6 +124,10 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <SellerOverview />,
+      },
+      {
+        path: 'profile',
+        element: <SellerProfile />,
       },
       {
         path: 'listings',
@@ -166,6 +189,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <AdminOrders /> },
       { path: 'payments', element: <AdminOverview /> },
       { path: 'settings', element: <AdminOverview /> },
+      { path: 'terms-settings', element: <TermsSettings /> },
     ],
   },
 

@@ -7,7 +7,8 @@ import {
   Package, 
   ShoppingBag, 
   CreditCard,
-  Settings, 
+  Settings,
+  FileText,
   LogOut 
 } from 'lucide-react'
 import { useAuth } from '@/context'
@@ -27,6 +28,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     { name: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
     { name: 'Payments', icon: CreditCard, path: '/admin/payments' },
     { name: 'Platform Settings', icon: Settings, path: '/admin/settings' },
+    { name: 'Terms & Conditions', icon: FileText, path: '/admin/terms-settings' },
   ]
 
   const isActive = (path) => location.pathname === path

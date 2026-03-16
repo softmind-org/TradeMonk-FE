@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Card, Button, Input, InputPassword } from '@components/ui'
 import { useRegister } from '@hooks/useRegister'
-import { Mail, User, Lock } from 'lucide-react'
+import { Mail, User, Lock, Building2, FileDigit, Receipt, MapPin } from 'lucide-react'
 import { useFormik } from 'formik'
 import { registerSchema } from '@/schemas/auth-schema'
 
@@ -14,7 +14,13 @@ const Register = () => {
       name: '',
       email: '',
       password: '',
-      role: 'buyer'
+      role: 'buyer',
+      acceptedTerms: false,
+      sellerType: 'private',
+      businessName: '',
+      registrationNumber: '',
+      vatNumber: '',
+      businessAddress: ''
     },
     validationSchema: registerSchema,
     onSubmit: (values) => {
@@ -22,7 +28,19 @@ const Register = () => {
         fullName: values.name,
         email: values.email,
         password: values.password,
-        role: values.role
+        role: values.role,
+        acceptedTerms: values.acceptedTerms
+      }
+
+      // Add seller-specific fields
+      if (values.role === 'seller') {
+        payload.sellerType = values.sellerType
+        if (values.sellerType === 'professional') {
+          payload.businessName = values.businessName
+          payload.registrationNumber = values.registrationNumber
+          payload.vatNumber = values.vatNumber
+          payload.businessAddress = values.businessAddress
+        }
       }
 
       register(payload, {
@@ -36,6 +54,9 @@ const Register = () => {
       })
     }
   })
+
+  const isSeller = formik.values.role === 'seller'
+  const isProfessional = formik.values.sellerType === 'professional'
 
   return (
       <Card className="bg-card border border-border p-8 md:p-10 relative overflow-hidden">
@@ -126,6 +147,119 @@ const Register = () => {
                 </svg>
               </div>
             </div>
+          </div>
+
+          {/* Seller Type Selection (only for sellers) */}
+          {isSeller && (
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-sm font-medium text-white mb-0.5">
+                Choose Seller Type <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <select
+                  name="sellerType"
+                  value={formik.values.sellerType}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-[#0B1220]/50 border border-white/10 rounded-lg py-3 pl-10 pr-10 text-sm text-white focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary appearance-none cursor-pointer"
+                >
+                  <option value="private" className="bg-[#0B1220]">Private</option>
+                  <option value="professional" className="bg-[#0B1220]">Professional</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              {formik.touched.sellerType && formik.errors.sellerType && (
+                <p className="text-red-400 text-xs">{formik.errors.sellerType}</p>
+              )}
+            </div>
+          )}
+
+          {/* Professional Seller Fields */}
+          {isSeller && isProfessional && (
+            <>
+              <Input
+                label="Business Name"
+                name="businessName"
+                placeholder="Enter your business name"
+                icon={Building2}
+                required
+                value={formik.values.businessName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.businessName && formik.errors.businessName}
+              />
+
+              <Input
+                label="Registration Number"
+                name="registrationNumber"
+                placeholder="Enter registration number"
+                icon={FileDigit}
+                required
+                value={formik.values.registrationNumber}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.registrationNumber && formik.errors.registrationNumber}
+              />
+
+              <Input
+                label="VAT Number (if applicable)"
+                name="vatNumber"
+                placeholder="Enter VAT number"
+                icon={Receipt}
+                required
+                value={formik.values.vatNumber}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.vatNumber && formik.errors.vatNumber}
+              />
+
+              <Input
+                label="Business Address"
+                name="businessAddress"
+                placeholder="Enter your business address"
+                icon={MapPin}
+                required
+                value={formik.values.businessAddress}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.businessAddress && formik.errors.businessAddress}
+              />
+            </>
+          )}
+
+          {/* Terms & Conditions Checkbox */}
+          <div className="flex flex-col gap-1.5">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                name="acceptedTerms"
+                checked={formik.values.acceptedTerms}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="mt-[2px] w-4 h-4 rounded border border-white/20 bg-[#0B1220]/50 accent-[#D4A017] cursor-pointer shrink-0"
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                I agree to the{' '}
+                <a
+                  href={`/terms/${formik.values.role}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-secondary hover:text-secondary/80 underline font-medium"
+                >
+                  {formik.values.role === 'seller' ? 'Seller' : 'Buyer'} Terms & Conditions
+                </a>
+              </span>
+            </label>
+            {formik.touched.acceptedTerms && formik.errors.acceptedTerms && (
+              <p className="text-red-400 text-xs ml-6">{formik.errors.acceptedTerms}</p>
+            )}
           </div>
           
           <Button 
