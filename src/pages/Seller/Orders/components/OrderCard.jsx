@@ -3,6 +3,7 @@ import { Package, Truck, Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { pokemonLogo } from '@assets'
 import orderService from '@/services/orderService'
+import shippingService from '@/services/shippingService'
 import toast from 'react-hot-toast'
 
 const OrderCard = ({ order, onUpdateStatus }) => {
@@ -16,8 +17,13 @@ const OrderCard = ({ order, onUpdateStatus }) => {
     totalAmount, 
     items, 
     shippingAddress,
-    feeBreakdown 
+    feeBreakdown,
+    labelUrl,
+    trackingUrl,
+    trackingNumber
   } = order
+
+  const [isGeneratingLabel, setIsGeneratingLabel] = useState(false)
 
   // Display fields
   const displayId = orderNumber || _id?.slice(-6) || 'Unknown'
@@ -71,6 +77,26 @@ const OrderCard = ({ order, onUpdateStatus }) => {
     }
   }
 
+  const handleGenerateLabel = async () => {
+    try {
+      setIsGeneratingLabel(true)
+      const res = await shippingService.generateLabel(_id)
+      if (res?.success && res.data?.labelUrl) {
+         toast.success('Label generated successfully!')
+         window.open(res.data.labelUrl, '_blank')
+         // We call this to update the parent component's state to 'shipped' visually
+         if (onUpdateStatus) onUpdateStatus(_id, 'shipped')
+      } else {
+         throw new Error(res.message || 'Failed to generate label')
+      }
+    } catch (err) {
+      console.error('Label error:', err)
+      toast.error(err.message || 'Error generating label')
+    } finally {
+      setIsGeneratingLabel(false)
+    }
+  }
+
   return (
     <div className="bg-[#111C2E] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors">
       {/* Header */}
@@ -112,15 +138,38 @@ const OrderCard = ({ order, onUpdateStatus }) => {
 
            {statusLine === 'confirmed' && (
              <Button 
-                onClick={() => onUpdateStatus(_id, 'shipped')}
+                onClick={handleGenerateLabel}
+                disabled={isGeneratingLabel}
                 className="bg-[#D4A017] hover:bg-[#D4A017]/90 text-black font-bold text-xs px-4 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors"
-                title="Mark package as shipped"
+                title="Generate SendCloud Parcel & Print Label"
              >
-               <Truck size={14} />
-               Mark as Shipped
+               {isGeneratingLabel ? <Loader2 size={14} className="animate-spin" /> : <Truck size={14} />}
+               <span className="hidden sm:inline">Create Shipment & Label</span>
+               <span className="sm:hidden">Ship</span>
              </Button>
            )}
 
+           {(statusLine === 'shipped' || statusLine === 'delivered') && labelUrl && (
+              <Button 
+                 onClick={() => window.open(labelUrl, '_blank')}
+                 variant="outline"
+                 className="border-white/10 hover:bg-white/5 text-white font-bold text-xs px-3 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors"
+                 title="Re-print Shipping Label"
+              >
+                 <Download size={14} />
+                 <span className="hidden sm:inline">Print Label</span>
+              </Button>
+           )}
+
+           {(statusLine === 'shipped' || statusLine === 'delivered') && !labelUrl && (
+              <div 
+                 className="px-3 py-2 rounded-lg border border-yellow-500/50 bg-yellow-500/10 text-yellow-500 font-bold text-[10px] uppercase tracking-wider flex items-center gap-2"
+                 title="SendCloud Test Mode: Labels are not generated until billing is active."
+              >
+                 <Truck size={14} />
+                 <span>Draft Label (Test Mode)</span>
+              </div>
+           )}
            <Button 
               onClick={handleDownloadInvoice}
               disabled={isDownloading}
@@ -165,10 +214,22 @@ const OrderCard = ({ order, onUpdateStatus }) => {
                <p className="text-white text-sm font-medium mb-1">{shippingAddress?.address || 'No address'}</p>
                <p className="text-muted-foreground text-sm mb-4">{shippingAddress?.city || 'No city'}, {shippingAddress?.zipCode || 'No zip'}</p>
                
-               <div className="flex items-center gap-2 text-[#D4A017]">
-                  <Truck size={14} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Secure Tracked Delivery Required</span>
-               </div>
+               {trackingUrl ? (
+                 <div className="flex flex-col gap-1 mt-auto">
+                    <div className="flex items-center gap-2 text-[#D4A017]">
+                      <Truck size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">In Transit</span>
+                    </div>
+                    <a href={trackingUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline font-medium">
+                       Track: {trackingNumber}
+                    </a>
+                 </div>
+               ) : (
+                 <div className="flex items-center gap-2 text-[#D4A017] mt-auto">
+                    <Truck size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Secure Tracked Delivery Required</span>
+                 </div>
+               )}
             </div>
          </div>
       </div>
