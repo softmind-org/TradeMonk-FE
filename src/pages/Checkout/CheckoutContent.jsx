@@ -138,8 +138,9 @@ const CheckoutContent = () => {
             // 3. TradeMonk commission (3.5% of ITEM COST ONLY)
             const sellerPlatformFee = parseFloat((sellerItemsTotal * 0.035).toFixed(2))
             
-            // 4. Final Seller Net (Item Cost + Shipping - TradeMonk Fee - Stripe Fee)
-            const sellerNet = parseFloat((sellerItemsTotal + sellerShipping - sellerPlatformFee - sellerStripeFee).toFixed(2))
+            // 4. Final Seller Net (Item Cost - TradeMonk Fee - Stripe Fee)
+            // Shipping is no longer sent to the seller as the platform (Admin) pays for the label.
+            const sellerNet = parseFloat((sellerItemsTotal - sellerPlatformFee - sellerStripeFee).toFixed(2))
 
             const orderResponse = await orderService.createOrder({
               items: group.items.map(item => ({
@@ -349,7 +350,12 @@ const CheckoutContent = () => {
                         {isLoadingShipping 
                           ? "Calculating..." : 
                           selectedShipping[group.sellerId] 
-                            ? `${selectedShipping[group.sellerId].name} (${selectedShipping[group.sellerId].carrier})`
+                            ? (
+                                <>
+                                  {selectedShipping[group.sellerId].name} ({selectedShipping[group.sellerId].carrier})
+                                  <span className="ml-1 text-[#D4A017] opacity-80">(Incls. €0.25 platform fee)</span>
+                                </>
+                              )
                             : "Enter valid destination country to estimate"}
                       </span>
                       <span className="text-white text-xs font-bold">
