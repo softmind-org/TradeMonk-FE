@@ -52,11 +52,11 @@ export const CartProvider = ({ children }) => {
   }, [])
 
   // Fetch cart from backend (new seller-grouped response)
-  const fetchCart = useCallback(async () => {
+  const fetchCart = useCallback(async (silent = false) => {
     if (!isAuthenticated) return
 
     try {
-      setIsLoading(true)
+      if (!silent) setIsLoading(true)
       const response = await cartService.getCart()
       if (response?.success && response.sellers) {
         // Backend returns { sellers: [{ sellerId, sellerName, items: [{ _id, productId, quantity }] }] }
@@ -87,7 +87,7 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching cart:', error)
     } finally {
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
     }
   }, [isAuthenticated])
 
@@ -114,7 +114,7 @@ export const CartProvider = ({ children }) => {
             await cartService.addToCart(item.id, item.quantity)
           }
           // After syncing all, fetch the final state from backend
-          await fetchCart()
+          await fetchCart(true)
         } catch (error) {
           console.error('Error syncing cart:', error)
         } finally {
@@ -144,7 +144,7 @@ export const CartProvider = ({ children }) => {
       try {
         const response = await cartService.addToCart(productId, quantity)
         if (response?.success) {
-          await fetchCart()
+          await fetchCart(true)
         }
       } catch (error) {
         console.error('Error adding to cart:', error)
@@ -177,7 +177,7 @@ export const CartProvider = ({ children }) => {
       try {
         const response = await cartService.removeFromCart(cartItemId)
         if (response?.success) {
-          await fetchCart()
+          await fetchCart(true)
         }
       } catch (error) {
         console.error('Error removing from cart:', error)
@@ -203,13 +203,20 @@ export const CartProvider = ({ children }) => {
     }
     
     if (isAuthenticated) {
+      // Optimistic Update
+      setItems(prev => prev.map(item => 
+        item.id === productId ? { ...item, quantity } : item
+      ))
+
       try {
         const response = await cartService.addToCart(productId, quantity)
         if (response?.success) {
-          await fetchCart()
+          await fetchCart(true)
         }
       } catch (error) {
         console.error('Error updating quantity:', error)
+        // Revert on error
+        await fetchCart() 
       }
     } else {
       setItems(prev => prev.map(item => 

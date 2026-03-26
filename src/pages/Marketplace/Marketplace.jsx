@@ -12,6 +12,40 @@ import { useFavorites } from '@/hooks/useFavorite'
 import { useQueryClient } from '@tanstack/react-query'
 import productService from '@/services/productService'
 import { pokemonLogo } from '@assets'
+const FilterSection = ({ title, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+  return (
+    <div className="mb-8 border-b border-white/5 pb-8 last:border-0">
+      <button 
+        className="flex items-center justify-between w-full mb-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-white transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+        <svg 
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="space-y-2">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const LoadingSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {[...Array(8)].map((_, i) => (
+      <div key={i} className="aspect-[3/4] bg-gray-700/20 rounded-xl animate-pulse"></div>
+    ))}
+  </div>
+)
 
 const Marketplace = () => {
   const navigate = useNavigate()
@@ -120,43 +154,7 @@ const Marketplace = () => {
     navigate(`/product/${id}`)
   }
   
-  // -- Subcomponents (internal for now) --
-  
-  const FilterSection = ({ title, children, defaultOpen = true }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen)
-    return (
-      <div className="mb-8 border-b border-white/5 pb-8 last:border-0">
-        <button 
-          className="flex items-center justify-between w-full mb-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-white transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {title}
-          <svg 
-            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {isOpen && (
-          <div className="space-y-2">
-            {children}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Loading Skeleton
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="aspect-[3/4] bg-gray-700/20 rounded-xl animate-pulse"></div>
-      ))}
-    </div>
-  )
+  // -- FilterSection and LoadingSkeleton moved outside to prevent re-rendering focus loss --
 
   return (
     <>
@@ -221,15 +219,25 @@ const Marketplace = () => {
                        <Input 
                           placeholder="€ Min" 
                           type="number" 
+                          min="0"
                           value={filters.priceMin}
-                          onChange={(e) => handleFilterChange('priceMin', e.target.value)}
+                          onChange={(e) => {
+                             if (e.target.value === '' || Number(e.target.value) >= 0) {
+                                handleFilterChange('priceMin', e.target.value);
+                             }
+                          }}
                           className="bg-[#111C2E] border-white/10 h-10 text-sm"
                        />
                        <Input 
                           placeholder="€ Max" 
                           type="number"
+                          min="0"
                           value={filters.priceMax}
-                          onChange={(e) => handleFilterChange('priceMax', e.target.value)}
+                          onChange={(e) => {
+                             if (e.target.value === '' || Number(e.target.value) >= 0) {
+                                handleFilterChange('priceMax', e.target.value);
+                             }
+                          }}
                           className="bg-[#111C2E] border-white/10 h-10 text-sm"
                        />
                     </div>

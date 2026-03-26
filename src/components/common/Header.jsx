@@ -92,7 +92,7 @@ const Header = () => {
         <div className="flex items-center gap-4 lg:gap-6">
           {/* Browse Games / Browse */}
           <Link 
-            to="/browse" 
+            to="/" 
             className="hidden lg:block text-foreground text-sm hover:text-secondary transition-colors"
           >
             {isAuthenticated ? 'Browse' : 'Browse Games'}
@@ -101,7 +101,7 @@ const Header = () => {
           {!isAuthenticated && (
             /* Sell Cards Button - Guest Only */
             <Link 
-              to="/sell"
+              to="/"
               className="bg-secondary text-background text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity hidden sm:block"
             >
               Sell Cards

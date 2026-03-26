@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { 
@@ -10,6 +10,7 @@ import {
   Loader2 
 } from 'lucide-react'
 import { Button, Input } from '@components/ui'
+import { categoryService } from '../../../services/categoryService'
 import { useCreateListing } from '../../../hooks/useCreateListing'
 import { useUpdateListing } from '../../../hooks/useUpdateListing'
 import { formatImageUrl } from '../../../utils'
@@ -25,7 +26,28 @@ const AddListing = () => {
   const [backImage, setBackImage] = useState(editData?.backImage ? formatImageUrl(editData.backImage) : null)
   const [frontFile, setFrontFile] = useState(null)
   const [backFile, setBackFile] = useState(null)
+  const [imageErrors, setImageErrors] = useState({ front: '', back: '' })
+  const [categories, setCategories] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Fetch Categories
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const response = await categoryService.getAll()
+        if (response?.success) {
+          // Only use enabled categories
+          const activeCats = (response.data || [])
+            .filter(c => c.status === 'enabled')
+            .map(c => ({ label: c.name, value: c.name }))
+          setCategories(activeCats)
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      }
+    }
+    fetchCats()
+  }, [])
 
   const createMutation = useCreateListing()
   const updateMutation = useUpdateListing()
@@ -33,6 +55,23 @@ const AddListing = () => {
   const handleImageUpload = (e, type) => {
     const file = e.target.files[0]
     if (file) {
+      // Validation: Type & Size
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      const maxSize = 5 * 1024 * 1024 // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        setImageErrors(prev => ({ ...prev, [type]: 'Unsupported format. Use JPG, PNG, or WEBP.' }))
+        return
+      }
+
+      if (file.size > maxSize) {
+        setImageErrors(prev => ({ ...prev, [type]: 'File too large. Max size 5MB.' }))
+        return
+      }
+
+      // Clear error on success
+      setImageErrors(prev => ({ ...prev, [type]: '' }))
+
       const url = URL.createObjectURL(file)
       if (type === 'front') {
         setFrontImage(url)
@@ -124,7 +163,7 @@ const AddListing = () => {
               className={`w-full bg-[#0B1220] border ${formik.touched[field.name] && formik.errors[field.name] ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-3 pr-10 focus:outline-none focus:border-[#D4A017] transition-colors appearance-none ${formik.values[field.name] ? 'text-white' : 'text-gray-500'}`}
             >
               <option value="" className="text-gray-500">Select {field.label}</option>
-              {field.options.map(opt => (
+              {(field.name === 'gameCategory' ? categories : field.options).map(opt => (
                 <option key={opt.value} value={opt.value} className="text-white">{opt.label}</option>
               ))}
             </select>
@@ -219,11 +258,11 @@ const AddListing = () => {
                     <div className="relative group">
                       <input 
                         type="file" 
-                        accept="image/*" 
+                        accept=".jpg,.jpeg,.png,.webp" 
                         onChange={(e) => handleImageUpload(e, type)} 
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                       />
-                      <div className={`h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors ${imgState ? 'border-[#D4A017] bg-[#D4A017]/5' : 'border-white/10 bg-[#0B1220] group-hover:border-white/20'}`}>
+                      <div className={`h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors ${imageErrors[type] ? 'border-red-500 bg-red-500/5' : imgState ? 'border-[#D4A017] bg-[#D4A017]/5' : 'border-white/10 bg-[#0B1220] group-hover:border-white/20'}`}>
                         {imgState ? (
                           <div className="relative w-full h-full p-2">
                             <img src={imgState} alt={type} className="w-full h-full object-contain rounded-lg" />
@@ -240,11 +279,14 @@ const AddListing = () => {
                             <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center text-muted-foreground group-hover:text-white transition-colors">
                               <ImageIcon size={24} />
                             </div>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">JPG/PNG Photo</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">JPG/PNG/WEBP Photo</p>
                           </>
                         )}
                       </div>
                     </div>
+                    {imageErrors[type] && (
+                      <p className="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{imageErrors[type]}</p>
+                    )}
                   </div>
                 )
               })}

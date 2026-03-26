@@ -13,7 +13,7 @@ export const productValidationSchema = Yup.object({
     condition: Yup.string().required('Condition is required'),
     price: Yup.number().positive('Price must be positive').required('Price is required'),
     quantity: Yup.number().integer().min(1, 'Quantity must be at least 1').required('Quantity is required'),
-    description: Yup.string().required('Description is required'),
+    description: Yup.string(),
 })
 
 /**
@@ -60,12 +60,7 @@ export const PRODUCT_FORM_FIELDS = {
             name: 'gameCategory',
             label: 'Game Category',
             type: 'select',
-            options: [
-                { label: 'Pokémon', value: 'Pokémon' },
-                { label: 'Yu-Gi-Oh!', value: 'Yu-Gi-Oh!' },
-                { label: 'Magic: The Gathering', value: 'Magic' },
-                { label: 'Sports Cards', value: 'Sports' }
-            ]
+            options: [] // To be populated dynamically
         },
         {
             name: 'rarity',
