@@ -51,6 +51,7 @@ const StoreSettings = () => {
   // Merchant Profile
   const [storeName, setStoreName] = useState('')
   const [storeDescription, setStoreDescription] = useState('')
+  const [userEmail, setUserEmail] = useState('')
   const [warehouseAddress, setWarehouseAddress] = useState({
     contactName: '',
     phone: '',
@@ -112,6 +113,7 @@ const StoreSettings = () => {
       const res = await userService.getProfile()
       if (res?.success && res.data) {
         setStoreName(res.data.storeName || '')
+        setUserEmail(res.data.email || '')
         // Store description if we ever add it to backend: setStoreDescription(res.data.storeDescription || '')
         if (res.data.warehouseAddress) {
           setWarehouseAddress(res.data.warehouseAddress)
@@ -368,8 +370,7 @@ const StoreSettings = () => {
             Email Address
           </label>
           <div className="bg-[#0B1220]/80 border border-white/10 rounded-lg px-4 py-3 text-white/60 text-sm">
-            {/* This will come from logged-in user context */}
-            abdulrafy5255@gmail.com
+            {userEmail || 'Loading email...'}
           </div>
         </div>
 

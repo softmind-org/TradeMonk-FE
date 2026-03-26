@@ -186,9 +186,9 @@ const AdminSellerDetail = () => {
               )}
             </button>
 
-            <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-widest border border-white/10 text-white hover:bg-white/5 transition-colors">
+            {/* <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-widest border border-white/10 text-white hover:bg-white/5 transition-colors">
               <Mail size={16} /> Contact Merchant
-            </button>
+            </button> */}
           </div>
 
           {/* Risk Assessment */}
