@@ -127,7 +127,8 @@ const Marketplace = () => {
     price: product.price,
     condition: product.condition,
     edition: product.collectionName,
-    badge: product.badges?.[0] || 'FAST SHIPPING',
+    sellerType: product.seller?.sellerType,
+    badge: product.badges?.[0], 
     topBadge: product.rarity,
     rating: product.rating || 5,
     isFavorite: !!favorites[product._id]

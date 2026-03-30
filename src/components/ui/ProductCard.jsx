@@ -16,6 +16,7 @@ const ProductCard = ({
   edition,
   rating,
   badge, // FAST SHIPPING, POWER SELLER, TOP RATED
+  sellerType, // private or professional
   badgeType = 'default',
   topBadge, // RARE, SECRET RARE, ULTRA RARE
   
@@ -41,6 +42,10 @@ const ProductCard = ({
     const baseStyles = 'text-[9px] font-semibold px-[6px] py-[2px] rounded bg-[#0B1220] uppercase tracking-wider'
     
     switch (label?.toUpperCase()) {
+      case 'PROFESSIONAL':
+        return `${baseStyles} text-secondary` // Gold
+      case 'PRIVATE':
+        return `${baseStyles} text-[#00D5FF]` // Cyan
       case 'FAST SHIPPING':
         return `${baseStyles} text-[#228B22]` // Green
       case 'POWER SELLER':
@@ -127,9 +132,9 @@ const ProductCard = ({
           <span className="text-white text-xl font-bold">
             {formatPrice(price)}
           </span>
-          {badge && (
-            <span className={getBottomBadgeStyles(badge)}>
-              {badge}
+          {(sellerType || badge) && (
+            <span className={getBottomBadgeStyles(sellerType || badge)}>
+              {sellerType || badge}
             </span>
           )}
         </div>

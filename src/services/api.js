@@ -38,8 +38,11 @@ api.interceptors.response.use(
                 // Unauthorized - clear token
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                // Don't redirect globally - let the specific hook/component handle it
-                // or the user can stay on the current page as a guest
+                
+                // Redirect to login with expired flag, but avoid loop if already on login
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login?expired=true';
+                }
             }
 
             // Return a formatted error object

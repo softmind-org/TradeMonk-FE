@@ -3,6 +3,7 @@
  * Main footer with links and newsletter signup
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Footer = () => {
   const [email, setEmail] = useState('')
@@ -31,7 +32,7 @@ const Footer = () => {
   ]
 
   return (
-    <footer className="bg-card">
+    <footer className="bg-[#0B1121]">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -111,15 +112,15 @@ const Footer = () => {
               © {currentYear} Trademonk Marketplace. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <a href="/privacy" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
+              <Link to="/privacy" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Privacy Policy
-              </a>
-              <a href="/terms" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
+              </Link>
+              <Link to="/terms" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Terms of Service
-              </a>
-              <a href="/cookies" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
+              </Link>
+              <Link to="/cookies" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Cookie Policy
-              </a>
+              </Link>
             </div>
           </div>
         </div>

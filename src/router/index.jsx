@@ -33,6 +33,8 @@ import {
   AdminSellerDetail,
   TermsSettings,
   TermsPage,
+  TermsOfService,
+  PrivacyPage,
   Profile,
   BuyerProfile,
   SellerProfile
@@ -57,6 +59,14 @@ export const router = createBrowserRouter([
       {
         path: '/product/:id',
         element: <ProductDetail />,
+      },
+      {
+        path: '/terms',
+        element: <TermsOfService />,
+      },
+      {
+        path: '/privacy',
+        element: <PrivacyPage />,
       },
       // Protected buyer-only routes (inside MainLayout)
       {

@@ -47,7 +47,7 @@ const CheckoutContent = () => {
 
   const formik = useFormik({
     initialValues: {
-      fullName: user?.name || '',
+      fullName: user?.fullName || '',
       email: user?.email || '',
       address: '',
       city: '',
@@ -263,25 +263,25 @@ const CheckoutContent = () => {
                 <div className="space-y-4">
                     <div>
                     <label htmlFor="fullName" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Full Name</label>
-                    <Input id="fullName" name="fullName" value={formik.values.fullName} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.fullName && formik.errors.fullName} placeholder="John Alex" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
+                    <Input id="fullName" name="fullName" autoComplete="name" value={formik.values.fullName} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.fullName && formik.errors.fullName} placeholder="John Alex" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
                     </div>
                     <div>
                     <label htmlFor="address" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Delivery Address</label>
-                    <Input id="address" name="address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address} placeholder="123 Collector Lane" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
+                    <Input id="address" name="address" autoComplete="street-address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address} placeholder="123 Collector Lane" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="city" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">City</label>
-                        <Input id="city" name="city" value={formik.values.city} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.city && formik.errors.city} placeholder="Neo-San Francisco" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
+                        <Input id="city" name="city" autoComplete="address-level2" value={formik.values.city} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.city && formik.errors.city} placeholder="Neo-San Francisco" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
                     </div>
                     <div>
                         <label htmlFor="zipCode" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Zip / Postal Code</label>
-                        <Input id="zipCode" name="zipCode" value={formik.values.zipCode} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.zipCode && formik.errors.zipCode} placeholder="94103" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
+                        <Input id="zipCode" name="zipCode" autoComplete="postal-code" value={formik.values.zipCode} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.zipCode && formik.errors.zipCode} placeholder="94103" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" />
                     </div>
                     </div>
                     <div>
                         <label htmlFor="country" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Country (ISO-2)</label>
-                        <Input id="country" name="country" value={formik.values.country} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.country && formik.errors.country} placeholder="NL, DE, GB" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" maxLength={2} />
+                        <Input id="country" name="country" autoComplete="country" value={formik.values.country} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.country && formik.errors.country} placeholder="NL, DE, GB" className="bg-[#111C2E] border-white/5 focus:border-[#D4A017]" maxLength={2} />
                     </div>
                 </div>
                 </div>

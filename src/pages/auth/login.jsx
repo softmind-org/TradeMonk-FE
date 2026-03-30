@@ -1,15 +1,18 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Card, Button, Input, InputPassword } from '@components/ui'
 import { useAuth } from '@context'
 import { useLogin } from '@hooks/useLogin'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, AlertCircle } from 'lucide-react'
 import { useFormik } from 'formik'
 import { loginSchema } from '@/schemas/auth-schema'
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login: loginContext } = useAuth()
   const { mutate: login, isPending, isError, error } = useLogin()
+  
+  const isExpired = new URLSearchParams(location.search).get('expired') === 'true'
   
   const formik = useFormik({
     initialValues: {
@@ -64,8 +67,17 @@ const Login = () => {
         <form onSubmit={formik.handleSubmit} className="space-y-6">
           {/* Error Message */}
           {isError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
               {error?.message || 'Login failed. Please check your credentials.'}
+            </div>
+          )}
+
+          {/* Session Expired Message */}
+          {isExpired && !isError && (
+            <div className="bg-[#D4A017]/10 border border-[#D4A017]/30 rounded-lg p-3 text-[#D4A017] text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
+              Session expired. Please sign in again.
             </div>
           )}
           
