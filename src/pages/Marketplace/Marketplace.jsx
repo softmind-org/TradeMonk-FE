@@ -3,7 +3,7 @@
  * Features sidebar filters, sorting, and product grid
  */
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, ProductCard, Input } from '@components/ui'
 import { useAuth } from '@context'
@@ -49,6 +49,8 @@ const LoadingSkeleton = () => (
 
 const Marketplace = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('q') || ''
   const { isAuthenticated } = useAuth()
   const queryClient = useQueryClient()
   
@@ -64,7 +66,7 @@ const Marketplace = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // -- API Integration --
-  const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy)
+  const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy, searchQuery)
   const products = data?.products || []
   
   // Get product IDs for favorites
@@ -298,7 +300,13 @@ const Marketplace = () => {
                    <Button 
                       variant="link" 
                       className="text-[#D4A017] mt-2"
-                      onClick={() => setFilters({ gameSystem: 'All', condition: 'ALL', priceMin: '', priceMax: '' })}
+                      onClick={() => {
+                        setFilters({ gameSystem: 'All', condition: 'ALL', priceMin: '', priceMax: '' })
+                        if (searchQuery) {
+                           searchParams.delete('q')
+                           setSearchParams(searchParams)
+                        }
+                      }}
                    >
                       Clear Filters
                    </Button>

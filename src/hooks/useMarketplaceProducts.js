@@ -11,10 +11,15 @@ import productService from '../services/productService'
  * @param {string} sortBy - Sort option ('newest', 'price-low', 'price-high')
  * @returns {Object} - Query result with data, isLoading, error
  */
-export const useMarketplaceProducts = (filters = {}, sortBy = 'newest') => {
+export const useMarketplaceProducts = (filters = {}, sortBy = 'newest', searchQuery = '') => {
     // Build API params from frontend filters
     const buildParams = () => {
         const params = {}
+
+        // Text Search
+        if (searchQuery && searchQuery.trim() !== '') {
+            params.keyword = searchQuery.trim()
+        }
 
         // Game System filter
         if (filters.gameSystem && filters.gameSystem !== 'All') {
@@ -53,7 +58,7 @@ export const useMarketplaceProducts = (filters = {}, sortBy = 'newest') => {
 
     return useQuery({
         // Include all filter values in queryKey for automatic refetching
-        queryKey: ['marketplace-products', filters, sortBy],
+        queryKey: ['marketplace-products', filters, sortBy, searchQuery],
         queryFn: async () => {
             const params = buildParams()
             const response = await productService.getProducts(params)

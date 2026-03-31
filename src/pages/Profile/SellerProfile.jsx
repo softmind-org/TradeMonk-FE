@@ -14,6 +14,7 @@ import {
   Package,
   Users
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const SellerProfile = () => {
   const { user } = useAuth()
@@ -134,9 +135,9 @@ const SellerProfile = () => {
           </div>
 
           <div className="relative z-10">
-            <button className="bg-[#1E293B] hover:bg-[#2A374A] text-white text-[10px] font-bold tracking-[0.1em] px-8 py-4 rounded-xl border border-white/5 transition-colors uppercase">
+            <Link to="/seller/settings" className="bg-[#1E293B] hover:bg-[#2A374A] text-white text-[10px] font-bold tracking-[0.1em] px-8 py-4 rounded-xl border border-white/5 transition-colors uppercase">
               Manage Store
-            </button>
+            </Link>
           </div>
         </div>
 

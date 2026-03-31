@@ -75,7 +75,10 @@ export const userService = {
      * @returns {Promise<Object>}
      */
     updateProfile: async (data) => {
-        return api.put('/users/profile', data)
+        const isFormData = data instanceof FormData
+        return api.put('/users/profile', data, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+        })
     },
 }
 

@@ -3,6 +3,7 @@ import { Search, Bell, Menu, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
 import { Link } from 'react-router-dom'
+import { formatImageUrl } from '@/utils/imageUtils'
 
 const SellerHeader = ({ onMenuClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -69,9 +70,13 @@ const SellerHeader = ({ onMenuClick }) => {
             <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-10 h-10 rounded-lg bg-[#D4A017] flex items-center justify-center text-black font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                  className="w-10 h-10 rounded-lg bg-[#D4A017] flex items-center justify-center text-black font-bold cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
                 >
-                    {getUserInitial()}
+                    {user?.storeLogo ? (
+                        <img src={formatImageUrl(user.storeLogo)} alt="Seller Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        getUserInitial()
+                    )}
                 </button>
 
                 {isDropdownOpen && (

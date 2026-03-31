@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Edit2, Check, CreditCard, Loader2, ExternalLink, AlertCircle, CheckCircle2, ChevronLeft, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -10,6 +10,19 @@ import {
 } from '@stripe/react-connect-js'
 import userService from '@/services/userService'
 import WarehouseAddressForm from './components/WarehouseAddressForm'
+import { useAuth } from '@/context/AuthContext'
+
+// Helper to format S3 image URLs when relative paths are returned instead of signed absolute paths
+const formatImageUrl = (path) => {
+  if (!path || path === '') return ''
+  if (path.startsWith('http')) return path
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
+  let serverBase = ''
+  try { serverBase = new URL(apiBase).origin }
+  catch { serverBase = apiBase.split('/api')[0] }
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${serverBase}${cleanPath}`
+}
 
 const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLIC_KEY
 
@@ -47,8 +60,10 @@ const BUSINESS_TYPES = [
 
 const StoreSettings = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user, updateUser } = useAuth()
 
   // Merchant Profile
+  const [storeLogo, setStoreLogo] = useState('')
   const [storeName, setStoreName] = useState('')
   const [storeDescription, setStoreDescription] = useState('')
   const [userEmail, setUserEmail] = useState('')
@@ -61,6 +76,9 @@ const StoreSettings = () => {
     country: 'NL'
   })
   
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const fileInputRef = useRef(null)
+
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [isEditingWarehouse, setIsEditingWarehouse] = useState(false)
@@ -114,6 +132,9 @@ const StoreSettings = () => {
       if (res?.success && res.data) {
         setStoreName(res.data.storeName || '')
         setUserEmail(res.data.email || '')
+        if (res.data.storeLogo) {
+          setStoreLogo(res.data.storeLogo)
+        }
         // Store description if we ever add it to backend: setStoreDescription(res.data.storeDescription || '')
         if (res.data.warehouseAddress) {
           setWarehouseAddress(res.data.warehouseAddress)
@@ -246,6 +267,35 @@ const StoreSettings = () => {
     setStripeSuccess('Stripe setup completed! Checking your account status...')
     // Re-fetch status to update UI
     fetchStripeStatus()
+  }
+
+  const handleLogoChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsUploadingLogo(true)
+      const formData = new FormData()
+      formData.append('storeLogo', file)
+      
+      const res = await userService.updateProfile(formData)
+      if (res?.success && res.data) {
+        setStoreLogo(res.data.storeLogo)
+        if (user && updateUser) {
+           updateUser({ ...user, storeLogo: res.data.storeLogo })
+        }
+        setProfileMessage({ type: 'success', text: 'Store logo updated successfully' })
+      }
+    } catch (error) {
+      console.error('Failed to update logo:', error)
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to update store logo'
+      setProfileMessage({ type: 'error', text: errorMsg })
+    } finally {
+      setIsUploadingLogo(false)
+      // reset input so same file can be selected again if needed
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000)
+    }
   }
 
   const handleNameSave = async () => {
@@ -559,12 +609,30 @@ const StoreSettings = () => {
         <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
           {/* Store Logo */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-[#D4A017] rounded-xl flex items-center justify-center">
-              <span className="text-black text-2xl font-black">J</span>
+            <div className="w-16 h-16 bg-[#D4A017] rounded-xl flex items-center justify-center overflow-hidden">
+               {storeLogo ? (
+                  <img src={formatImageUrl(storeLogo)} alt="Store Logo" className="w-full h-full object-cover" />
+               ) : (
+                  <span className="text-black text-2xl font-black">{storeName ? storeName.charAt(0).toUpperCase() : 'S'}</span>
+               )}
             </div>
-            <Button className="bg-[#0B1220] hover:bg-[#0B1220]/80 text-white border border-white/10 font-bold text-sm px-4 py-2">
-              Change Logo
-            </Button>
+            <div>
+               <Button 
+                 onClick={() => fileInputRef.current?.click()} 
+                 disabled={isUploadingLogo}
+                 className="bg-[#0B1220] hover:bg-[#0B1220]/80 text-white border border-white/10 font-bold text-sm px-4 py-2"
+               >
+                 {isUploadingLogo ? <Loader2 size={16} className="animate-spin mr-2 inline" /> : null}
+                 Change Logo
+               </Button>
+               <input 
+                 type="file" 
+                 ref={fileInputRef} 
+                 className="hidden" 
+                 accept="image/*" 
+                 onChange={handleLogoChange} 
+               />
+            </div>
           </div>
 
           {/* Store Display Name */}

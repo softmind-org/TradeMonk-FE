@@ -3,7 +3,7 @@
  * Main navigation header with logo, search, and actions
  */
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, useCart } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
 import { 
@@ -15,6 +15,7 @@ import {
   Store,
   Shield
 } from 'lucide-react'
+import { formatImageUrl } from '@/utils/imageUtils'
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,6 +26,8 @@ const Header = () => {
   const { user, isAuthenticated } = useAuth()
   const { itemCount } = useCart()
   const { mutate: logout } = useLogout()
+
+  const navigate = useNavigate()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -39,8 +42,11 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    // Will be connected to search functionality
-    console.log('Search:', searchQuery)
+    if (searchQuery.trim()) {
+      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`)
+      setIsMobileMenuOpen(false)
+      // Optional: Clear search box after submit, but usually better to leave it so user knows what they searched
+    }
   }
 
   const handleLogout = () => {
@@ -78,7 +84,7 @@ const Header = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <input
+            <inputBrowse
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -92,7 +98,7 @@ const Header = () => {
         <div className="flex items-center gap-4 lg:gap-6">
           {/* Browse Games / Browse */}
           <Link 
-            to="/" 
+            to="/marketplace" 
             className="hidden lg:block text-foreground text-sm hover:text-secondary transition-colors"
           >
             {isAuthenticated ? 'Browse' : 'Browse Games'}
@@ -101,7 +107,7 @@ const Header = () => {
           {!isAuthenticated && (
             /* Sell Cards Button - Guest Only */
             <Link 
-              to="/"
+              to="/register"
               className="bg-secondary text-background text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity hidden sm:block"
             >
               Sell Cards
@@ -125,9 +131,13 @@ const Header = () => {
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black hover:bg-[#D4A01755] transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black hover:bg-[#D4A01755] transition-colors overflow-hidden"
               >
-                {getUserInitial()}
+                {user?.storeLogo ? (
+                   <img src={formatImageUrl(user.storeLogo)} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                   getUserInitial()
+                )}
               </button>
 
               {/* User Dropdown */}
@@ -264,8 +274,12 @@ const Header = () => {
             {isAuthenticated && (
                <div className="border-t border-border mt-2 pt-2">
                   <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black">
-                        {getUserInitial()}
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black overflow-hidden">
+                        {user?.storeLogo ? (
+                          <img src={formatImageUrl(user.storeLogo)} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          getUserInitial()
+                        )}
                       </div>
                       <span className="text-foreground text-sm font-medium">{user?.fullName || user?.email}</span>
                   </div>
