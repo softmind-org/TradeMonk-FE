@@ -10,6 +10,7 @@ import {
   ChevronRight,
   LogOut
 } from 'lucide-react'
+import { formatImageUrl } from '@/utils/imageUtils'
 
 const BuyerProfile = () => {
   const { user } = useAuth()
@@ -72,10 +73,14 @@ const BuyerProfile = () => {
           {/* Subtle background glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
           
-          <div className="w-32 h-32 rounded-3xl bg-[#D4A01733] border border-[#D4A01766] flex items-center justify-center relative z-10 shrink-0">
-            <span className="text-[#D4A017] text-4xl font-black">
-              {(user?.fullName || user?.email || 'U').charAt(0).toUpperCase()}
-            </span>
+          <div className="w-32 h-32 rounded-3xl bg-[#D4A01733] border border-[#D4A01766] flex items-center justify-center relative z-10 shrink-0 overflow-hidden">
+            {user?.storeLogo ? (
+              <img src={formatImageUrl(user.storeLogo)} alt="User Logo" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[#D4A017] text-4xl font-black">
+                {(user?.fullName || user?.email || 'U').charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
 
           <div className="flex-1 text-center md:text-left relative z-10">

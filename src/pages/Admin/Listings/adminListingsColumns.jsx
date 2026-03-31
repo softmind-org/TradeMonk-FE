@@ -103,10 +103,10 @@ export const ADMIN_LISTINGS_COLUMNS = ({ onView }) => [
   },
   {
     key: 'actions',
-    label: '',
+    label: 'Actions',
     width: '60px',
     render: (row) => (
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-start">
         <ActionBtn icon={Eye} onClick={() => onView?.(row)} />
       </div>
     ),
