@@ -194,7 +194,7 @@ const ListingDetail = () => {
             </div>
             <div className="bg-[#0B1220] rounded-xl p-4 border border-white/5">
               <p className="text-gray-300 text-sm leading-relaxed italic">
-                "{listing.description || 'Freshly pulled and immediately sleeved. Centering is perfect. Front and back photos provided to show zero whitening.'}"
+                "{listing.description || 'No Description'}"
               </p>
             </div>
           </div>

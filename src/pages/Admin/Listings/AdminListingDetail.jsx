@@ -1,13 +1,43 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Loader2, Star, Calendar, ShieldCheck, ExternalLink, Flag, Share2, Trash2 } from 'lucide-react'
+import {
+  ChevronLeft,
+  Pencil,
+  Trash2,
+  Tag,
+  Clock,
+  Eye,
+  Heart,
+  ShieldCheck,
+  Loader2,
+  Image as ImageIcon,
+} from 'lucide-react'
+import { useModal } from '../../../context/modal'
+import DeleteConfirmation from '@components/Modals/DeleteConfirmation'
+import { useDeleteListing } from '../../../hooks/useDeleteListing'
 import productService from '@/services/productService'
+import { formatImageUrl } from '../../../utils'
 
+/* ── Stat Card ── */
+const StatCard = ({ label, value, accent = false }) => (
+  <div className="bg-[#0B1220] border border-white/5 rounded-xl p-5 flex flex-col justify-center">
+    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+      {label}
+    </span>
+    <span className={`text-2xl font-bold ${accent ? 'text-[#D4A017]' : 'text-white'}`}>
+      {value}
+    </span>
+  </div>
+)
+
+/* ── Listing Detail Page (Admin View) ── */
 const AdminListingDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { openModal, closeModal } = useModal()
+  const deleteMutation = useDeleteListing()
 
-  const [product, setProduct] = useState(null)
+  const [listing, setListing] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -17,7 +47,7 @@ const AdminListingDetail = () => {
       setError(null)
       const response = await productService.getProductById(id)
       if (response?.success) {
-        setProduct(response.data)
+        setListing(response.data)
       }
     } catch (err) {
       console.error('Failed to fetch product:', err)
@@ -40,244 +70,168 @@ const AdminListingDetail = () => {
     )
   }
 
-  if (error || !product) {
+  // If no listing data, redirect back
+  if (error || !listing) {
     return (
-      <div className="text-center py-20">
-        <p className="text-red-400 text-sm mb-4">{error || 'Asset not found'}</p>
+      <div className="space-y-6 animate-fade-in">
         <button
           onClick={() => navigate('/admin/listings')}
-          className="bg-[#D4A017] text-black font-bold text-xs px-6 py-2 rounded-lg"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors"
         >
-          Back to Catalog
+          <ChevronLeft size={16} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Back to Inventory</span>
         </button>
+        <div className="text-center py-20">
+          <h2 className="text-xl font-bold text-white mb-2">Listing Not Found</h2>
+          <p className="text-muted-foreground text-sm">{error || 'The listing data is unavailable.'}</p>
+        </div>
       </div>
     )
   }
 
-  const {
-    title,
-    collectionName,
-    setNumber,
-    gameSystem,
-    price,
-    condition,
-    rarity,
-    status,
-    description,
-    images,
-    seller,
-    createdAt,
-    _id: productId,
-  } = product
-
-  const isActive = status === 'active'
-  const subtitle = [collectionName, gameSystem, setNumber].filter(Boolean).join(' • ')
-  const mainImage = images?.[0]
-  const formattedDate = createdAt
-    ? new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : '—'
+  const handleDelete = () => {
+    openModal(
+      <DeleteConfirmation
+        listing={{ name: listing.title, id: listing._id }}
+        onConfirm={async () => {
+          try {
+            await deleteMutation.mutateAsync(listing._id)
+            closeModal()
+            navigate('/admin/listings')
+          } catch (err) {
+            console.error('Delete failed:', err)
+          }
+        }}
+        onCancel={closeModal}
+      />,
+      440
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Back Button */}
+    <div className="space-y-6 animate-fade-in">
+      {/* Back Link */}
       <button
         onClick={() => navigate('/admin/listings')}
-        className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-white uppercase tracking-widest transition-colors"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors"
       >
-        <ArrowLeft size={14} />
-        Back to Catalog
+        <ChevronLeft size={16} />
+        <span className="text-[10px] font-bold uppercase tracking-widest">Back to Inventory</span>
       </button>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* ── LEFT: Image Card ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column - Card Image */}
         <div className="lg:col-span-4 space-y-6">
-          <div
-            className="rounded-2xl p-6 border border-white/5 flex flex-col items-center"
-            style={{ backgroundColor: '#111C2E' }}
-          >
-            <div className="w-full aspect-[3/4] rounded-xl overflow-hidden bg-[#0B1220] border border-white/10 mb-4">
-              {mainImage ? (
-                <img src={mainImage} alt={title} className="w-full h-full object-contain" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                  No Image
+          <div className="bg-[#0B1220] rounded-2xl p-6 border border-white/5 aspect-[3/4] flex items-center justify-center">
+            {listing.images?.[0] ? (
+              <img
+                src={formatImageUrl(listing.images[0])}
+                alt={listing.title}
+                className="w-full h-full object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <div className="w-24 h-32 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Tag size={32} className="text-muted-foreground" />
                 </div>
-              )}
-            </div>
-            <button className="bg-[#0B1220] border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-              View Full Res
-            </button>
+                <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+              </div>
+            )}
           </div>
 
-          {/* Platform Status Card */}
-          <div
-            className="rounded-2xl p-6 border border-white/5"
-            style={{ backgroundColor: '#111C2E' }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck size={14} className="text-muted-foreground" />
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                Platform Status
-              </h4>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/80">Auto-Mod Audit</span>
-                <span className="text-[11px] font-bold text-[#4ADE80] uppercase tracking-wider">Passed</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/80">Price Anomaly</span>
-                <span className="text-[11px] font-bold text-[#F59E0B] uppercase tracking-wider">Low Volatility</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/80">Flags</span>
-                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">None</span>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* ── RIGHT: Details ── */}
+        {/* Right Column - Details */}
         <div className="lg:col-span-8 space-y-6">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span
-                  className="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                  style={{
-                    backgroundColor: isActive ? '#4ADE801A' : '#EF44441A',
-                    color: isActive ? '#4ADE80' : '#EF4444',
-                  }}
-                >
-                  {isActive ? 'Active Asset' : status}
-                </span>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  ID: {productId?.slice(-4)?.toUpperCase()}
-                </span>
-              </div>
-              <h1 className="text-3xl font-black text-white tracking-tight mb-1">{title}</h1>
-              <p className="text-sm font-bold text-[#D4A017] uppercase tracking-wider">
-                {subtitle}
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">{listing.title}</h1>
+              <p className="text-muted-foreground text-sm uppercase tracking-widest font-bold">
+                {listing.collectionName} • {listing.gameSystem}
               </p>
             </div>
-
-            <div className="flex flex-col gap-2 flex-shrink-0">
-              <button className="bg-[#4ADE80]/10 border border-[#4ADE80]/20 text-[#4ADE80] text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 rounded-lg hover:bg-[#4ADE80]/20 transition-colors flex items-center gap-2">
-                <Star size={12} />
-                Feature Asset
-              </button>
-              <button className="bg-[#3B82F6]/10 border border-[#3B82F6]/20 text-[#3B82F6] text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 rounded-lg hover:bg-[#3B82F6]/20 transition-colors flex items-center gap-2">
-                <Flag size={12} />
-                Edit Metadata
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={handleDelete}
+                className="p-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+              >
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
 
-          {/* KPI Cards */}
+          {/* Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl p-5 border border-white/5" style={{ backgroundColor: '#111C2E' }}>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Listed Price
-              </p>
-              <h3 className="text-2xl font-black text-white">
-                €{Number(price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-            </div>
-            <div className="rounded-2xl p-5 border border-white/5" style={{ backgroundColor: '#111C2E' }}>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Market Match
-              </p>
-              <h3 className="text-2xl font-black text-[#4ADE80]">99.2%</h3>
-            </div>
-            <div className="rounded-2xl p-5 border border-white/5" style={{ backgroundColor: '#111C2E' }}>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Total Leads
-              </p>
-              <h3 className="text-2xl font-black text-blue-400">24</h3>
-            </div>
-          </div>
-
-          {/* Core Parameters */}
-          <div
-            className="rounded-2xl p-6 border border-white/5"
-            style={{ backgroundColor: '#111C2E' }}
-          >
-            <div className="flex items-center gap-2 mb-5">
-              <ShieldCheck size={14} className="text-muted-foreground" />
-              <h4 className="text-sm font-bold text-white">Core Parameters</h4>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-8">
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                  Rarity Classification
-                </p>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-muted-foreground" />
-                  <span className="text-sm font-bold text-white">{rarity || 'N/A'}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                  Merchant Entity
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[#4ADE80]">
-                    {seller?.name || 'Unknown'}
-                  </span>
-                  <ExternalLink size={12} className="text-[#4ADE80]" />
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                  Surface Condition
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">{condition || 'N/A'}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-                  Initialization Date
-                </p>
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} className="text-muted-foreground" />
-                  <span className="text-sm font-bold text-white">{formattedDate}</span>
-                </div>
+            <StatCard
+              label="Market Price"
+              value={`€${Number(listing.price || 0).toLocaleString()}`}
+              accent
+            />
+            <StatCard
+              label="Available Stock"
+              value={`${listing.quantity || 1} Units`}
+            />
+            <div className="bg-[#0B1220] border border-white/5 rounded-xl p-5 flex flex-col justify-center">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                Current Status
+              </span>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${listing.status === 'active' ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`} />
+                <span className="text-lg font-bold text-white uppercase">{listing.status}</span>
               </div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Internal Descriptive Analysis
-            </p>
-            <div
-              className="rounded-2xl p-6 border border-white/5"
-              style={{ backgroundColor: '#111C2E' }}
-            >
-              <p className="text-sm text-white/80 italic leading-relaxed">
-                {description ? `"${description}"` : 'No description provided'}
+          {/* Collectible Metadata */}
+          <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <Tag size={16} className="text-muted-foreground" />
+              <span className="text-white font-bold">Collectible Metadata</span>
+            </div>
+            <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Clock size={12} className="text-muted-foreground" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Rarity:</span>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                  {listing.rarity || 'Secret Rare'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock size={12} className="text-muted-foreground" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Condition:</span>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                  {listing.condition || 'Mint'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Collector's Notes */}
+          <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock size={14} className="text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Collector's Notes
+              </span>
+            </div>
+            <div className="bg-[#0B1220] rounded-xl p-4 border border-white/5">
+              <p className="text-gray-300 text-sm leading-relaxed italic">
+                "{listing.description || 'No Description'}"
               </p>
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-            <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-white uppercase tracking-widest transition-colors">
-                <Flag size={14} /> Report Inaccuracy
-              </button>
-              <button className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-white uppercase tracking-widest transition-colors">
-                <Share2 size={14} /> Public URL
-              </button>
+          {/* Verified Authentication */}
+          <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <h3 className="text-white font-bold mb-1">Verified Authentication</h3>
+              <p className="text-muted-foreground text-xs">
+                This listing is currently being monitored for price volatility and authentication integrity.
+              </p>
             </div>
-            <button className="bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 rounded-lg hover:bg-[#EF4444]/20 transition-colors flex items-center gap-2">
-              <Trash2 size={14} /> De-Index Asset
-            </button>
+            <ShieldCheck size={32} className="text-[#60A5FA] flex-shrink-0" />
           </div>
         </div>
       </div>

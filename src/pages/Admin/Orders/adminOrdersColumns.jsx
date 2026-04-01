@@ -89,14 +89,14 @@ export const ADMIN_ORDERS_COLUMNS = ({ onView }) => [
     width: '140px',
     render: (row) => <StatusBadge value={get(row, 'orderStatus')} />,
   },
-  {
-    key: 'actions',
-    label: '',
-    width: '60px',
-    render: (row) => (
-      <div className="flex items-center justify-end">
-        <ActionBtn icon={Clock} onClick={() => onView?.(row)} />
-      </div>
-    ),
-  },
+  // {
+  //   key: 'actions',
+  //   label: '',
+  //   width: '60px',
+  //   render: (row) => (
+  //     <div className="flex items-center justify-end">
+  //       <ActionBtn icon={Clock} onClick={() => onView?.(row)} />
+  //     </div>
+  //   ),
+  // },
 ]
