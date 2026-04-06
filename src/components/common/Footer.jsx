@@ -18,17 +18,17 @@ const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   const marketplaceLinks = [
-    { label: 'Pokémon', href: '/pokemon' },
-    { label: 'Yu-Gi-Oh', href: '/yugioh' },
-    { label: 'Magic: The Gathering', href: '/magic' },
-    { label: 'Latest Arrivals', href: '/latest' },
+    { label: 'Pokémon', href: '/dddd' },
+    { label: 'Yu-Gi-Oh', href: '/' },
+    { label: 'Magic: The Gathering', href: '/' },
+    { label: 'Latest Arrivals', href: '/' },
   ]
 
   const resourceLinks = [
-    { label: 'Price Guide', href: '/price-guide' },
-    { label: 'Authentication', href: '/authentication' },
-    { label: 'Seller Tools', href: '/seller-tools' },
-    { label: 'Help Center', href: '/help' },
+    { label: 'Price Guide', href: '/' },
+    { label: 'Authentication', href: '/' },
+    { label: 'Seller Tools', href: '/' },
+    { label: 'Help Center', href: '/' },
   ]
 
   return (
@@ -49,13 +49,10 @@ const Footer = () => {
             <h4 className="text-foreground font-medium mb-4">Marketplace</h4>
             <ul className="space-y-3">
               {marketplaceLinks.map((link) => (
-                <li key={link.href}>
-                  <a 
-                    href={link.href}
-                    className="text-muted-foreground text-sm hover:text-secondary transition-colors"
-                  >
+                <li key={link.label}>
+                  <span className="text-muted-foreground text-sm">
                     {link.label}
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -66,13 +63,10 @@ const Footer = () => {
             <h4 className="text-foreground font-medium mb-4">Resources</h4>
             <ul className="space-y-3">
               {resourceLinks.map((link) => (
-                <li key={link.href}>
-                  <a 
-                    href={link.href}
-                    className="text-muted-foreground text-sm hover:text-secondary transition-colors"
-                  >
+                <li key={link.label}>
+                  <span className="text-muted-foreground text-sm">
                     {link.label}
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -117,9 +111,6 @@ const Footer = () => {
               </Link>
               <Link to="/terms" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Terms of Service
-              </Link>
-              <Link to="/cookies" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
-                Cookie Policy
               </Link>
             </div>
           </div>

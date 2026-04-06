@@ -118,7 +118,7 @@ const Login = () => {
           
           <Button 
             type="submit"
-            className="w-full py-6 text-base font-semibold text-[#0B1220]"
+            className="w-full !py-3 !px-4 text-base  font-semibold text-[#0B1220] active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer"
             variant="secondary"
             disabled={isPending}
           >

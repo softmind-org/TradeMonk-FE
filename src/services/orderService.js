@@ -71,6 +71,14 @@ export const orderService = {
     },
 
     /**
+     * Get payment statistics for admin dashboard (GMV, Revenue, Growth)
+     * @returns {Promise<Object>}
+     */
+    getPaymentStats: async () => {
+        return api.get('/orders/payment-stats');
+    },
+
+    /**
      * Download order invoice as PDF
      * @param {string} orderId 
      * @returns {Promise<Blob>}

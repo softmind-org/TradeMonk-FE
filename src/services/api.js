@@ -38,10 +38,10 @@ api.interceptors.response.use(
                 // Unauthorized - clear token
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                
+
                 // Redirect to login with expired flag, but avoid loop if already on login
                 if (!window.location.pathname.includes('/login')) {
-                    window.location.href = '/login?expired=true';
+                    window.location.href = '/login';
                 }
             }
 

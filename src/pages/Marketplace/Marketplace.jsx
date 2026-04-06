@@ -2,7 +2,7 @@
  * Marketplace Page
  * Features sidebar filters, sorting, and product grid
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, ProductCard, Input } from '@components/ui'
@@ -64,6 +64,27 @@ const Marketplace = () => {
   
   const [sortBy, setSortBy] = useState('newest') // 'newest', 'price-low', 'price-high'
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+
+  const [isSortOpen, setIsSortOpen] = useState(false)
+  const sortRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setIsSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+  
+  const sortOptions = [
+    { value: 'newest', label: 'Newest' },
+    { value: 'price-low', label: 'Price: Low' },
+    { value: 'price-high', label: 'Price: High' }
+  ]
+  
+  const currentSortLabel = sortOptions.find(o => o.value === sortBy)?.label || 'Newest'
 
   // -- API Integration --
   const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy, searchQuery)
@@ -260,22 +281,40 @@ const Marketplace = () => {
                  </div>
                  
                  {/* Sort Dropdown */}
-                 <div className="relative group min-w-[200px]">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground text-xs font-bold uppercase tracking-wide z-10">
-                       Order By:
-                    </div>
-                    <select
-                       value={sortBy}
-                       onChange={(e) => setSortBy(e.target.value)}
-                       className="w-full bg-[#111C2E] border border-white/10 rounded-lg h-12 pl-24 pr-10 text-sm text-white focus:outline-none focus:border-[#D4A017] appearance-none cursor-pointer font-medium"
+                 <div className="relative group min-w-[200px]" ref={sortRef}>
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className={`w-full flex items-center justify-between bg-[#111C2E] border rounded-lg h-12 px-4 text-sm text-white focus:outline-none transition-colors font-medium ${isSortOpen ? 'border-[#D4A017]' : 'border-white/10 hover:border-white/20'}`}
                     >
-                       <option value="newest">Newest</option>
-                       <option value="price-low">Price: Low</option>
-                       <option value="price-high">Price: High</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs font-bold uppercase tracking-wide">Order By:</span>
+                        <span>{currentSortLabel}</span>
+                      </div>
+                      <svg className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isSortOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#111C2E] border border-white/10 rounded-lg shadow-xl overflow-hidden z-20">
+                        {sortOptions.map((option, index) => (
+                           <button
+                             key={option.value}
+                             onClick={() => {
+                               setSortBy(option.value)
+                               setIsSortOpen(false)
+                             }}
+                             className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between ${
+                               sortBy === option.value
+                                 ? 'bg-[#D4A017]/10 text-white font-semibold border-l-2 border-[#D4A017]'
+                                 : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium border-l-2 border-transparent'
+                             } ${index !== sortOptions.length - 1 ? 'border-b border-b-white/5' : ''}`}
+                           >
+                             {option.label}
+                           </button>
+                        ))}
+                      </div>
+                    )}
                  </div>
               </div>
 
