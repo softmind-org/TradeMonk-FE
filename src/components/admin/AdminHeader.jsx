@@ -1,4 +1,5 @@
-import { Bell, Menu, CheckCircle2 } from 'lucide-react'
+import { Menu, CheckCircle2 } from 'lucide-react'
+import NotificationDropdown from '@components/common/NotificationDropdown'
 
 const AdminHeader = ({ title = 'Overview', onMenuClick }) => {
   return (
@@ -25,9 +26,7 @@ const AdminHeader = ({ title = 'Overview', onMenuClick }) => {
             </div>
 
             {/* Notifications */}
-            <button className="relative text-muted-foreground hover:text-white transition-colors">
-                <Bell size={20} />
-            </button>
+            <NotificationDropdown />
 
             {/* Avatar */}
             <div className="w-10 h-10 rounded-lg bg-[#1E293B] border border-white/10 flex items-center justify-center text-white font-bold cursor-pointer hover:bg-[#2A3B52] transition-colors text-sm">

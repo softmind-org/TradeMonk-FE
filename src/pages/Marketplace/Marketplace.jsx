@@ -9,8 +9,9 @@ import { Button, ProductCard, Input } from '@components/ui'
 import { useAuth } from '@context'
 import { useMarketplaceProducts } from '@/hooks/useMarketplaceProducts'
 import { useFavorites } from '@/hooks/useFavorite'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import productService from '@/services/productService'
+import categoryService from '@/services/categoryService'
 import { pokemonLogo } from '@assets'
 const FilterSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -85,6 +86,20 @@ const Marketplace = () => {
   ]
   
   const currentSortLabel = sortOptions.find(o => o.value === sortBy)?.label || 'Newest'
+
+  // Fetch dynamic categories
+  const { data: categoryData } = useQuery({
+    queryKey: ['marketplaceCategories'],
+    queryFn: async () => {
+      const res = await categoryService.getAll()
+      return res.data || []
+    }
+  })
+
+  // Combine "All" with fetched category names. Default fallback if api fails.
+  const dynamicGameSystems = categoryData && categoryData.length > 0 
+    ? ['All', ...categoryData.map(c => c.name)] 
+    : ['All', 'Pokémon', 'Yu-Gi-Oh', 'Magic: The Gathering']
 
   // -- API Integration --
   const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy, searchQuery)
@@ -203,7 +218,7 @@ const Marketplace = () => {
                 
                 {/* Game System Filter */}
                 <FilterSection title="Game System">
-                   {['All', 'Pokémon', 'Yu-Gi-Oh', 'Magic: The Gathering'].map(game => (
+                   {dynamicGameSystems.map(game => (
                      <div 
                         key={game}
                         className={`cursor-pointer py-2 px-3 rounded-lg transition-colors text-sm font-medium ${

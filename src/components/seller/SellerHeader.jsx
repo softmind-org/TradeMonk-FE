@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, Menu, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { Search, Menu, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
 import { Link } from 'react-router-dom'
 import { formatImageUrl } from '@/utils/imageUtils'
+import NotificationDropdown from '@components/common/NotificationDropdown'
 
 const SellerHeader = ({ onMenuClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -61,10 +62,7 @@ const SellerHeader = ({ onMenuClick }) => {
             </div>
 
             {/* Notifications */}
-            <button className="relative text-muted-foreground hover:text-white transition-colors">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#D4A017]"></span>
-            </button>
+            <NotificationDropdown />
 
             {/* Avatar Dropdown */}
             <div className="relative" ref={dropdownRef}>

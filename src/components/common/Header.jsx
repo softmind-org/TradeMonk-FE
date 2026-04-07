@@ -16,6 +16,7 @@ import {
   Shield
 } from 'lucide-react'
 import { formatImageUrl } from '@/utils/imageUtils'
+import NotificationDropdown from '@components/common/NotificationDropdown'
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -221,6 +222,9 @@ const Header = () => {
               </span>
             )}
           </Link>
+
+          {/* Notifications (authenticated only) */}
+          {isAuthenticated && <NotificationDropdown />}
 
           {/* Mobile Menu Button */}
           <button 

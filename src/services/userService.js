@@ -80,6 +80,14 @@ export const userService = {
             headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
         })
     },
+
+    /**
+     * Get logged-in user stats (active orders, purchases, saved items)
+     * @returns {Promise<Object>}
+     */
+    getMyStats: async () => {
+        return api.get('/users/stats')
+    },
 }
 
 export default userService
