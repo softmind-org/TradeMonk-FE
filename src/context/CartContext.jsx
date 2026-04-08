@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import toast from 'react-hot-toast'
 import cartService from '@/services/cartService'
 import shippingService from '@/services/shippingService'
 import { useAuth } from './AuthContext'
@@ -136,7 +137,7 @@ export const CartProvider = ({ children }) => {
     const existingItem = items.find(item => item.id === productId)
     const newQuantity = (existingItem?.quantity || 0) + quantity
     if (product.quantity !== undefined && newQuantity > product.quantity) {
-      alert(`Only ${product.quantity} items available in stock.`)
+      toast.error(`Only ${product.quantity} items available in stock.`, { id: `stock-${productId}` })
       return
     }
 
@@ -198,7 +199,7 @@ export const CartProvider = ({ children }) => {
     // Stock check
     const item = items.find(i => i.id === productId)
     if (item?.maxQuantity !== undefined && quantity > item.maxQuantity) {
-        alert(`Limit reached: Only ${item.maxQuantity} available.`)
+        toast.error(`Limit reached: Only ${item.maxQuantity} available.`, { id: `stock-${productId}` })
         return
     }
     
@@ -215,8 +216,12 @@ export const CartProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error updating quantity:', error)
-        // Revert on error
-        await fetchCart() 
+        // Show error message
+        const errMsg = error?.response?.data?.message || 'Failed to update quantity.'
+        toast.error(errMsg, { id: `limit-error-${productId}` })
+        
+        // Revert on error silently so it doesn't trigger skeleton loader
+        await fetchCart(true) 
       }
     } else {
       setItems(prev => prev.map(item => 
@@ -227,13 +232,16 @@ export const CartProvider = ({ children }) => {
 
   // Increment quantity
   const incrementQuantity = useCallback(async (item) => {
-    await updateQuantity(item.id, item.quantity + 1, item.cartItemId)
-  }, [updateQuantity])
+    // Check state immediately in case of rapid clicks to prevent sending stale data
+    const currentItem = items.find(i => i.id === item.id) || item
+    await updateQuantity(item.id, currentItem.quantity + 1, item.cartItemId)
+  }, [updateQuantity, items])
 
   // Decrement quantity
   const decrementQuantity = useCallback(async (item) => {
-    await updateQuantity(item.id, item.quantity - 1, item.cartItemId)
-  }, [updateQuantity])
+    const currentItem = items.find(i => i.id === item.id) || item
+    await updateQuantity(item.id, currentItem.quantity - 1, item.cartItemId)
+  }, [updateQuantity, items])
 
   // Clear entire cart
   const clearCart = useCallback(async () => {
