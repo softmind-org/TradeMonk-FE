@@ -159,7 +159,8 @@ const StoreSettings = () => {
         setStripeStatus(status)
 
         // Determine the correct step
-        if (status.connected && status.payoutsEnabled && status.onboardingComplete) {
+        if (status.connected && status.onboardingComplete) {
+          // If onboarding is complete, they belong in the connected state. (Payouts could be pending verification)
           setStep('connected')
         } else if (status.connected && !status.onboardingComplete) {
           setStep('onboarding')
@@ -498,12 +499,12 @@ const StoreSettings = () => {
 
       {/* Embedded Stripe Connect Onboarding */}
       {isLoadingOnboarding || !stripeConnectInstance ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-12 px-4">
           <Loader2 size={24} className="text-[#635BFF] animate-spin" />
           <span className="ml-3 text-muted-foreground text-sm">Loading Stripe onboarding...</span>
         </div>
       ) : (
-        <div className="bg-white rounded-xl overflow-hidden">
+        <div className="w-full bg-[#111C2E] rounded-xl px-2 py-4 md:px-4 md:py-6" style={{ minHeight: '600px' }}>
           <ConnectComponentsProvider connectInstance={stripeConnectInstance}>
             <ConnectAccountOnboarding
               onExit={handleOnboardingExit}
@@ -524,12 +525,18 @@ const StoreSettings = () => {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h3 className="text-white font-bold text-sm">Stripe Account Connected</h3>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
-              <CheckCircle2 size={12} /> Active
-            </span>
+            {stripeStatus.payoutsEnabled ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
+                <CheckCircle2 size={12} /> Active
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full">
+                <AlertCircle size={12} /> Verification Pending
+              </span>
+            )}
           </div>
           <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">
-            Payouts Enabled
+            {stripeStatus.payoutsEnabled ? 'Payouts Enabled' : 'Payouts Pending Verification'}
           </p>
         </div>
       </div>
