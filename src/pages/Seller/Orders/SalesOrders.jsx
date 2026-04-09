@@ -52,7 +52,7 @@ const SalesOrders = () => {
       }
     } catch (error) {
       console.error('Error updating order:', error)
-      toast.error(error?.response?.data?.message || 'Failed to update order status')
+      toast.error(error?.message || 'Failed to update order status')
     }
   }
 
