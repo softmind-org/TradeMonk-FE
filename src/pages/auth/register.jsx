@@ -248,12 +248,12 @@ const Register = () => {
               <span className="text-xs text-muted-foreground leading-relaxed">
                 I agree to the{' '}
                 <a
-                  href={`/terms/${formik.values.role}`}
+                  href="/terms"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-secondary hover:text-secondary/80 underline font-medium"
                 >
-                  {formik.values.role === 'seller' ? 'Seller' : 'Buyer'} Terms & Conditions
+                  Terms & Conditions
                 </a>
               </span>
             </label>
