@@ -156,6 +156,7 @@ const AddListing = () => {
         navigate('/seller/listings')
       } catch (error) {
         console.error('Error saving listing:', error)
+        toast.error(error?.response?.data?.message || error?.message || 'Failed to save listing. Please try again.')
       } finally {
         setIsSubmitting(false)
       }
