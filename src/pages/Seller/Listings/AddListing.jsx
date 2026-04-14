@@ -15,6 +15,7 @@ import { useCreateListing } from '../../../hooks/useCreateListing'
 import { useUpdateListing } from '../../../hooks/useUpdateListing'
 import { formatImageUrl } from '../../../utils'
 import { productValidationSchema, PRODUCT_FORM_FIELDS } from '../../../schemas/productSchema'
+import toast from 'react-hot-toast'
 
 const AddListing = () => {
   const navigate = useNavigate()
@@ -98,6 +99,24 @@ const AddListing = () => {
     enableReinitialize: true,
     validationSchema: productValidationSchema,
     onSubmit: async (values) => {
+      // Validate Images for new listings
+      if (!isEditMode) {
+        let hasImageError = false;
+        if (!frontFile) {
+          setImageErrors(prev => ({ ...prev, front: 'Front image is required' }));
+          hasImageError = true;
+        }
+        if (!backFile) {
+          setImageErrors(prev => ({ ...prev, back: 'Back image is required' }));
+          hasImageError = true;
+        }
+        
+        if (hasImageError) {
+          toast.error('Please upload both front and back images to continue.');
+          return;
+        }
+      }
+
       setIsSubmitting(true)
       try {
         const formData = new FormData()
