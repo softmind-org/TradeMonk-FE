@@ -139,12 +139,25 @@ const ProductDetail = () => {
             {/* Left Column - Image Gallery + Chart */}
             <div className="lg:col-span-5 space-y-6">
               {/* Image */}
-              <div className="bg-[#0B1220] rounded-3xl p-8 border border-white/5 relative aspect-[3/4] flex items-center justify-center">
-                <img 
-                  src={formatImageUrl(product.images?.[0])} 
-                  alt={product.title}
-                  className="w-full h-full object-contain drop-shadow-2xl"
-                />
+              <div className="bg-[#0B1220] rounded-3xl p-8 border border-white/5 relative aspect-[3/4] flex items-center justify-center group [perspective:1000px]">
+                <div className="relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                  {/* Front Image */}
+                  <div className="absolute inset-0 [backface-visibility:hidden]">
+                    <img 
+                      src={formatImageUrl(product.images?.[0])} 
+                      alt={product.title}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
+                  </div>
+                  {/* Back Image */}
+                  <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                    <img 
+                      src={formatImageUrl(product.backImage)} 
+                      alt={`${product.title} Back`}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
+                  </div>
+                </div>
                 
                 {/* Image Dots - show if multiple images */}
                 {product.images?.length > 1 && (

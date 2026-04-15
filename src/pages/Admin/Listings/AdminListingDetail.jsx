@@ -123,13 +123,26 @@ const AdminListingDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column - Card Image */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#0B1220] rounded-2xl p-6 border border-white/5 aspect-[3/4] flex items-center justify-center">
+          <div className="bg-[#0B1220] rounded-2xl p-6 border border-white/5 aspect-[3/4] flex items-center justify-center group [perspective:1000px]">
             {listing.images?.[0] ? (
-              <img
-                src={formatImageUrl(listing.images[0])}
-                alt={listing.title}
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
+              <div className="relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                {/* Front Image */}
+                <div className="absolute inset-0 [backface-visibility:hidden]">
+                  <img
+                    src={formatImageUrl(listing.images[0])}
+                    alt={listing.title}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                  />
+                </div>
+                {/* Back Image */}
+                <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                  <img
+                    src={formatImageUrl(listing.backImage)}
+                    alt={`${listing.title} Back`}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                  />
+                </div>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-3 text-muted-foreground">
                 <div className="w-24 h-32 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
