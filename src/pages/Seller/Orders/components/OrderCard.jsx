@@ -97,6 +97,28 @@ const OrderCard = ({ order, onUpdateStatus }) => {
     }
   }
 
+  const handleDownloadLabel = async () => {
+    try {
+      setIsDownloading(true)
+      const blob = await shippingService.downloadLabel(_id)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      // Provide a clean filename using order ID
+      a.download = `shipping_label_${orderNumber || _id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success('Label downloaded successfully')
+    } catch (err) {
+      console.error('Download label error:', err)
+      toast.error('Failed to download shipping label')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   return (
     <div className="bg-[#111C2E] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors">
       {/* Header */}
@@ -151,7 +173,8 @@ const OrderCard = ({ order, onUpdateStatus }) => {
 
            {(statusLine === 'shipped' || statusLine === 'delivered') && labelUrl && (
               <Button 
-                 onClick={() => window.open(labelUrl, '_blank')}
+                 onClick={handleDownloadLabel}
+                 disabled={isDownloading}
                  variant="outline"
                  className="border-white/10 hover:bg-white/5 text-white font-bold text-xs px-3 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors"
                  title="Re-print Shipping Label"

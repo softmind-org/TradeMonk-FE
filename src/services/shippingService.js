@@ -34,6 +34,18 @@ const shippingService = {
      */
     generateLabel: async (orderId) => {
         return api.post('/shipping/label', { orderId });
+    },
+
+    /**
+     * Download shipping label securely via backend proxy
+     * @param {string} orderId - Mongoose Order ID
+     * @returns {Promise<Blob>}
+     */
+    downloadLabel: async (orderId) => {
+        const response = await api.get(`/shipping/label/${orderId}`, {
+            responseType: 'blob'
+        });
+        return response; // returns the raw blob or data based on interceptor
     }
 };
 
