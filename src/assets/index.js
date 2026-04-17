@@ -7,7 +7,7 @@ export { default as blueEyes } from './images/Blue-Eyes.svg'
 export { default as darkMagicianGirl } from './images/DarkMagicianGirl.svg'
 export { default as exodia } from './images/ExodiatheForbiddenOne.svg'
 export { default as blackLotus } from './images/BlackLotus.svg'
-
+export { default as returnfile } from './images/Returnform.pdf'
 // Brand Logos
 export { default as pokemonLogo } from './images/Pokémon.svg'
 export { default as yugiohLogo } from './images/Yu-Gi-Oh.svg'

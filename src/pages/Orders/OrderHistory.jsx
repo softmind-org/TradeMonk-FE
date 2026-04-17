@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@components/ui'
-import { ArrowRight, Package, Download, Loader2 } from 'lucide-react'
-import { pokemonLogo } from '@assets'
+import { ArrowRight, Package, Download, Loader2, FileText } from 'lucide-react'
+import { pokemonLogo, returnfile } from '@assets'
 import orderService from '@/services/orderService'
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -79,6 +79,20 @@ const OrderCard = ({ order }) => {
     }
   }
 
+  const handleDownloadReturnForm = () => {
+    try {
+      const a = document.createElement('a')
+      a.href = returnfile
+      a.download = `TradeMonk_Return_Form.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (err) {
+      console.error('Failed to download return form:', err)
+      alert('Failed to download return form PDF')
+    }
+  }
+
   return (
     <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-6 md:p-8 hover:border-white/10 transition-colors">
 
@@ -141,6 +155,15 @@ const OrderCard = ({ order }) => {
           >
             {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
             <span className="hidden sm:inline">Invoice</span>
+          </button>
+          
+          <button
+            onClick={handleDownloadReturnForm}
+             className="bg-transparent border border-[#1E3A8A] hover:bg-[#1E3A8A]/20 text-blue-400 font-bold text-xs px-3 py-2 h-auto flex items-center gap-2 cursor-pointer transition-colors rounded-lg"
+             title="Download Return Form (PDF)"
+          >
+            <FileText size={14} />
+            <span className="hidden sm:inline">Return Form</span>
           </button>
         </div>
       </div>
