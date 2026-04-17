@@ -2,19 +2,56 @@
  * Marketplace Page
  * Features sidebar filters, sorting, and product grid
  */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+
 import { Button, ProductCard, Input } from '@components/ui'
 import { useAuth } from '@context'
 import { useMarketplaceProducts } from '@/hooks/useMarketplaceProducts'
 import { useFavorites } from '@/hooks/useFavorite'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import productService from '@/services/productService'
+import categoryService from '@/services/categoryService'
 import { pokemonLogo } from '@assets'
+const FilterSection = ({ title, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+  return (
+    <div className="mb-8 border-b border-white/5 pb-8 last:border-0">
+      <button 
+        className="flex items-center justify-between w-full mb-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-white transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {title}
+        <svg 
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="space-y-2">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const LoadingSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {[...Array(8)].map((_, i) => (
+      <div key={i} className="aspect-[3/4] bg-gray-700/20 rounded-xl animate-pulse"></div>
+    ))}
+  </div>
+)
 
 const Marketplace = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('q') || ''
   const { isAuthenticated } = useAuth()
   const queryClient = useQueryClient()
   
@@ -29,8 +66,43 @@ const Marketplace = () => {
   const [sortBy, setSortBy] = useState('newest') // 'newest', 'price-low', 'price-high'
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
+  const [isSortOpen, setIsSortOpen] = useState(false)
+  const sortRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sortRef.current && !sortRef.current.contains(event.target)) {
+        setIsSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+  
+  const sortOptions = [
+    { value: 'newest', label: 'Newest' },
+    { value: 'price-low', label: 'Price: Low' },
+    { value: 'price-high', label: 'Price: High' }
+  ]
+  
+  const currentSortLabel = sortOptions.find(o => o.value === sortBy)?.label || 'Newest'
+
+  // Fetch dynamic categories
+  const { data: categoryData } = useQuery({
+    queryKey: ['marketplaceCategories'],
+    queryFn: async () => {
+      const res = await categoryService.getAll()
+      return res.data || []
+    }
+  })
+
+  // Combine "All" with fetched category names. Default fallback if api fails.
+  const dynamicGameSystems = categoryData && categoryData.length > 0 
+    ? ['All', ...categoryData.map(c => c.name)] 
+    : ['All', 'Pokémon', 'Yu-Gi-Oh', 'Magic: The Gathering']
+
   // -- API Integration --
-  const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy)
+  const { data, isLoading, error } = useMarketplaceProducts(filters, sortBy, searchQuery)
   const products = data?.products || []
   
   // Get product IDs for favorites
@@ -93,9 +165,10 @@ const Marketplace = () => {
     price: product.price,
     condition: product.condition,
     edition: product.collectionName,
-    badge: product.badges?.[0],
+    sellerType: product.seller?.sellerType,
+    badge: product.badges?.[0], 
     topBadge: product.rarity,
-    rating: product.rating || 0,
+    rating: product.rating || 5,
     isFavorite: !!favorites[product._id]
   }))
 
@@ -120,46 +193,10 @@ const Marketplace = () => {
     navigate(`/product/${id}`)
   }
   
-  // -- Subcomponents (internal for now) --
-  
-  const FilterSection = ({ title, children, defaultOpen = true }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen)
-    return (
-      <div className="mb-8 border-b border-white/5 pb-8 last:border-0">
-        <button 
-          className="flex items-center justify-between w-full mb-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-white transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {title}
-          <svg 
-            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {isOpen && (
-          <div className="space-y-2">
-            {children}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Loading Skeleton
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="aspect-[3/4] bg-gray-700/20 rounded-xl animate-pulse"></div>
-      ))}
-    </div>
-  )
+  // -- FilterSection and LoadingSkeleton moved outside to prevent re-rendering focus loss --
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen py-8">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8">
           
@@ -181,7 +218,7 @@ const Marketplace = () => {
                 
                 {/* Game System Filter */}
                 <FilterSection title="Game System">
-                   {['All', 'Pokémon', 'Yu-Gi-Oh', 'Magic: The Gathering'].map(game => (
+                   {dynamicGameSystems.map(game => (
                      <div 
                         key={game}
                         className={`cursor-pointer py-2 px-3 rounded-lg transition-colors text-sm font-medium ${
@@ -219,17 +256,27 @@ const Marketplace = () => {
                  <FilterSection title="Price Authority">
                     <div className="space-y-3">
                        <Input 
-                          placeholder="$ Min" 
+                          placeholder="€ Min" 
                           type="number" 
+                          min="0"
                           value={filters.priceMin}
-                          onChange={(e) => handleFilterChange('priceMin', e.target.value)}
+                          onChange={(e) => {
+                             if (e.target.value === '' || Number(e.target.value) >= 0) {
+                                handleFilterChange('priceMin', e.target.value);
+                             }
+                          }}
                           className="bg-[#111C2E] border-white/10 h-10 text-sm"
                        />
                        <Input 
-                          placeholder="$ Max" 
+                          placeholder="€ Max" 
                           type="number"
+                          min="0"
                           value={filters.priceMax}
-                          onChange={(e) => handleFilterChange('priceMax', e.target.value)}
+                          onChange={(e) => {
+                             if (e.target.value === '' || Number(e.target.value) >= 0) {
+                                handleFilterChange('priceMax', e.target.value);
+                             }
+                          }}
                           className="bg-[#111C2E] border-white/10 h-10 text-sm"
                        />
                     </div>
@@ -249,22 +296,40 @@ const Marketplace = () => {
                  </div>
                  
                  {/* Sort Dropdown */}
-                 <div className="relative group min-w-[200px]">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground text-xs font-bold uppercase tracking-wide z-10">
-                       Order By:
-                    </div>
-                    <select
-                       value={sortBy}
-                       onChange={(e) => setSortBy(e.target.value)}
-                       className="w-full bg-[#111C2E] border border-white/10 rounded-lg h-12 pl-24 pr-10 text-sm text-white focus:outline-none focus:border-[#D4A017] appearance-none cursor-pointer font-medium"
+                 <div className="relative group min-w-[200px]" ref={sortRef}>
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className={`w-full flex items-center justify-between bg-[#111C2E] border rounded-lg h-12 px-4 text-sm text-white focus:outline-none transition-colors font-medium ${isSortOpen ? 'border-[#D4A017]' : 'border-white/10 hover:border-white/20'}`}
                     >
-                       <option value="newest">Newest</option>
-                       <option value="price-low">Price: Low</option>
-                       <option value="price-high">Price: High</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs font-bold uppercase tracking-wide">Order By:</span>
+                        <span>{currentSortLabel}</span>
+                      </div>
+                      <svg className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isSortOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-[#111C2E] border border-white/10 rounded-lg shadow-xl overflow-hidden z-20">
+                        {sortOptions.map((option, index) => (
+                           <button
+                             key={option.value}
+                             onClick={() => {
+                               setSortBy(option.value)
+                               setIsSortOpen(false)
+                             }}
+                             className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between ${
+                               sortBy === option.value
+                                 ? 'bg-[#D4A017]/10 text-white font-semibold border-l-2 border-[#D4A017]'
+                                 : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium border-l-2 border-transparent'
+                             } ${index !== sortOptions.length - 1 ? 'border-b border-b-white/5' : ''}`}
+                           >
+                             {option.label}
+                           </button>
+                        ))}
+                      </div>
+                    )}
                  </div>
               </div>
 
@@ -289,7 +354,13 @@ const Marketplace = () => {
                    <Button 
                       variant="link" 
                       className="text-[#D4A017] mt-2"
-                      onClick={() => setFilters({ gameSystem: 'All', condition: 'ALL', priceMin: '', priceMax: '' })}
+                      onClick={() => {
+                        setFilters({ gameSystem: 'All', condition: 'ALL', priceMin: '', priceMax: '' })
+                        if (searchQuery) {
+                           searchParams.delete('q')
+                           setSearchParams(searchParams)
+                        }
+                      }}
                    >
                       Clear Filters
                    </Button>
@@ -299,7 +370,7 @@ const Marketplace = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 

@@ -3,25 +3,32 @@
  * Main navigation header with logo, search, and actions
  */
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '@/context'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth, useCart } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
 import { 
   LayoutDashboard, 
   Package, 
   User, 
   Heart, 
-  LogOut 
+  LogOut,
+  Store,
+  Shield
 } from 'lucide-react'
+import { formatImageUrl } from '@/utils/imageUtils'
+import NotificationDropdown from '@components/common/NotificationDropdown'
 
-const Header = ({ cartCount = 0 }) => {
+const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   
   const { user, isAuthenticated } = useAuth()
+  const { itemCount } = useCart()
   const { mutate: logout } = useLogout()
+
+  const navigate = useNavigate()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,8 +43,11 @@ const Header = ({ cartCount = 0 }) => {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    // Will be connected to search functionality
-    console.log('Search:', searchQuery)
+    if (searchQuery.trim()) {
+      navigate(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`)
+      setIsMobileMenuOpen(false)
+      // Optional: Clear search box after submit, but usually better to leave it so user knows what they searched
+    }
   }
 
   const handleLogout = () => {
@@ -48,8 +58,9 @@ const Header = ({ cartCount = 0 }) => {
   // Get user initial for avatar
   const getUserInitial = () => {
     if (!user) return 'U';
-    // Try name first, then email
-    return (user.name || user.email || 'U').charAt(0).toUpperCase();
+    // Use first letter of fullName if available, else email
+    const name = user.fullName || user.email || 'U';
+    return name.charAt(0).toUpperCase();
   }
 
   return (
@@ -88,7 +99,7 @@ const Header = ({ cartCount = 0 }) => {
         <div className="flex items-center gap-4 lg:gap-6">
           {/* Browse Games / Browse */}
           <Link 
-            to="/browse" 
+            to="/marketplace" 
             className="hidden lg:block text-foreground text-sm hover:text-secondary transition-colors"
           >
             {isAuthenticated ? 'Browse' : 'Browse Games'}
@@ -97,7 +108,7 @@ const Header = ({ cartCount = 0 }) => {
           {!isAuthenticated && (
             /* Sell Cards Button - Guest Only */
             <Link 
-              to="/sell"
+              to="/register"
               className="bg-secondary text-background text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity hidden sm:block"
             >
               Sell Cards
@@ -121,9 +132,13 @@ const Header = ({ cartCount = 0 }) => {
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black hover:bg-[#D4A01755] transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black hover:bg-[#D4A01755] transition-colors overflow-hidden"
               >
-                {getUserInitial()}
+                {user?.storeLogo ? (
+                   <img src={formatImageUrl(user.storeLogo)} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                   getUserInitial()
+                )}
               </button>
 
               {/* User Dropdown */}
@@ -138,7 +153,7 @@ const Header = ({ cartCount = 0 }) => {
                 >
                   <div className="p-5">
                     <p className="text-[#94A3B8] text-[10px] font-bold tracking-wider uppercase mb-1">
-                      COLLECTOR
+                        {user?.role === 'seller' ? 'MERCHANT' : 'COLLECTOR'}
                     </p>
                     <p className="text-white font-bold text-sm truncate">
                       {user?.fullName || user?.email}
@@ -146,22 +161,40 @@ const Header = ({ cartCount = 0 }) => {
                   </div>
 
                   <div className="border-t border-white/5 py-2">
-                    <Link to="/dashboard" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link 
+                      to={user?.role === 'seller' ? '/seller/dashboard' : '/'} 
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors"
+                    >
                       <LayoutDashboard size={16} />
-                      Dashboard
+                      {user?.role === 'seller' ? 'Seller Dashboard' : 'Buyer Dashboard'}
                     </Link>
-                    <Link to="/orders" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    {user?.role === 'admin' && (
+                      <Link 
+                        to="/admin/dashboard" 
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-5 py-2.5 text-[#D4A017] hover:text-[#D4A017] hover:bg-white/5 text-[12px] font-bold transition-colors"
+                      >
+                        <Shield size={16} />
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <Link to="/orders" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <Package size={16} />
                       My Orders
                     </Link>
-                    <Link to="/profile" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    <Link 
+                      to={user?.role === 'seller' ? '/seller/profile' : '/profile'} 
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors"
+                    >
                       <User size={16} />
                       Profile
                     </Link>
-                    <Link to="/favorites" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                    {/* <Link to="/favorites" className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
                       <Heart size={16} />
                       My Favorites
-                    </Link>
+                    </Link> */}
                   </div>
 
                   <div className="border-t border-white/5 py-2">
@@ -183,12 +216,15 @@ const Header = ({ cartCount = 0 }) => {
             <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            {cartCount > 0 && (
+            {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-secondary text-background text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {cartCount}
+                {itemCount}
               </span>
             )}
           </Link>
+
+          {/* Notifications (authenticated only) */}
+          {isAuthenticated && <NotificationDropdown />}
 
           {/* Mobile Menu Button */}
           <button 
@@ -205,6 +241,7 @@ const Header = ({ cartCount = 0 }) => {
           </button>
         </div>
       </div>
+
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
@@ -241,8 +278,12 @@ const Header = ({ cartCount = 0 }) => {
             {isAuthenticated && (
                <div className="border-t border-border mt-2 pt-2">
                   <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black">
-                        {getUserInitial()}
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#D4A01733] text-secondary text-[10px] font-black overflow-hidden">
+                        {user?.storeLogo ? (
+                          <img src={formatImageUrl(user.storeLogo)} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          getUserInitial()
+                        )}
                       </div>
                       <span className="text-foreground text-sm font-medium">{user?.fullName || user?.email}</span>
                   </div>
@@ -251,6 +292,7 @@ const Header = ({ cartCount = 0 }) => {
                   </button>
                </div>
             )}
+          
           </div>
         </div>
       )}

@@ -1,0 +1,55 @@
+name: Deploy Trade-Monk-FE on VPS (Stage)
+
+on:
+  push:
+    branches:
+      - stage
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy .env file
+        run: |
+          # Copy .env file from your env path to project root
+          cp /var/www/tradeMonk-envs/TradeMonk-FE-Stage-ENV .env
+
+      - name: Clean old cache
+        run: |
+          echo "Removing old node_modules and dist folder for a fresh build"
+          rm -rf node_modules dist
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+  notify-status:
+    name: Notify Deployment Completed
+    runs-on: ubuntu-latest
+    needs: build
+    if: always()
+  
+    steps:
+      - name: Send Slack notification
+        env:
+          STATUS: ${{ needs.build.result }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          WEBHOOK: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: |
+          ICON="✅"
+          if [ "$STATUS" != "success" ]; then
+            ICON="❌"
+          fi
+  
+          MESSAGE="┌─────────────────────────────┐\n$ICON *Stage Deployment Completed*\n└─────────────────────────────┘\n\n• *Repository:* <https://github.com/$REPO|TradeMonk FE (Stage) on VPS>\n• *Branch:* \`stage\`\n• *Status:* *$STATUS*\n• *Triggered by:* $ACTOR"
+  
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"$MESSAGE\"}" \
+          "$WEBHOOK"

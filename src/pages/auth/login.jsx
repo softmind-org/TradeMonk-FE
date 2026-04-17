@@ -1,19 +1,18 @@
-/**
- * Login Page
- */
-import { Link, useNavigate } from 'react-router-dom'
-import { AuthLayout } from '@layouts'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Card, Button, Input, InputPassword } from '@components/ui'
 import { useAuth } from '@context'
 import { useLogin } from '@hooks/useLogin'
-import { Mail, Lock } from 'lucide-react'
+import { Mail, Lock, AlertCircle } from 'lucide-react'
 import { useFormik } from 'formik'
 import { loginSchema } from '@/schemas/auth-schema'
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login: loginContext } = useAuth()
   const { mutate: login, isPending, isError, error } = useLogin()
+  
+  const isExpired = new URLSearchParams(location.search).get('expired') === 'true'
   
   const formik = useFormik({
     initialValues: {
@@ -22,7 +21,6 @@ const Login = () => {
     },
     validationSchema: loginSchema,
     onSubmit: (values) => {
-      // Call the login mutation
       login(values, {
         onSuccess: (response) => {
           console.log('Login successful:', response)
@@ -30,11 +28,16 @@ const Login = () => {
           if (response.success && response.data) {
             const { accessToken, ...user } = response.data
             
-            // Update AuthContext with user data and token
             loginContext(user, accessToken)
             
-            // Redirect to home page
-            navigate('/')
+            // Redirect based on role
+            if (user.role === 'admin') {
+                navigate('/admin/dashboard')
+            } else if (user.role === 'seller') {
+                navigate('/seller/dashboard')
+            } else {
+                navigate('/')
+            }
           }
         },
         onError: (error) => {
@@ -45,7 +48,6 @@ const Login = () => {
   })
 
   return (
-    <AuthLayout>
       <Card className="bg-card border border-border p-8 md:p-10 relative overflow-hidden">
         {/* Top Gradient Line */}
         <div 
@@ -65,8 +67,17 @@ const Login = () => {
         <form onSubmit={formik.handleSubmit} className="space-y-6">
           {/* Error Message */}
           {isError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
               {error?.message || 'Login failed. Please check your credentials.'}
+            </div>
+          )}
+
+          {/* Session Expired Message */}
+          {isExpired && !isError && (
+            <div className="bg-[#D4A017]/10 border border-[#D4A017]/30 rounded-lg p-3 text-[#D4A017] text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
+              Session expired. Please sign in again.
             </div>
           )}
           
@@ -107,7 +118,7 @@ const Login = () => {
           
           <Button 
             type="submit"
-            className="w-full py-6 text-base font-semibold text-[#0B1220]"
+            className="w-full !py-3 !px-4 text-base  font-semibold text-[#0B1220] active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer"
             variant="secondary"
             disabled={isPending}
           >
@@ -125,7 +136,6 @@ const Login = () => {
           </div>
         </form>
       </Card>
-    </AuthLayout>
   )
 }
 

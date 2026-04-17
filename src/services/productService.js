@@ -50,7 +50,63 @@ export const productService = {
      */
     getProductById: async (productId) => {
         return api.get(`/products/${productId}`)
-    }
+    },
+
+    /**
+     * Get products for the current seller
+     * @param {Object} params - Query parameters
+     * @returns {Promise<Object>} - Paginated product list for seller
+     */
+    getSellerProducts: async (params = {}) => {
+        const queryParams = new URLSearchParams(params).toString()
+        const endpoint = `/products/me${queryParams ? `?${queryParams}` : ''}`
+        return api.get(endpoint)
+    },
+
+    /**
+     * Create a new product listing
+     * @param {FormData|Object} productData - Product data
+     * @returns {Promise<Object>} - Created product
+     */
+    createProduct: async (productData) => {
+        return api.post('/products', productData, {
+            headers: {
+                'Content-Type': productData instanceof FormData ? 'multipart/form-data' : 'application/json'
+            }
+        })
+    },
+
+    /**
+     * Update an existing product listing
+     * @param {string} productId - Product ID
+     * @param {FormData|Object} productData - Updated product data
+     * @returns {Promise<Object>} - Updated product
+     */
+    updateProduct: async (productId, productData) => {
+        return api.put(`/products/${productId}`, productData, {
+            headers: {
+                'Content-Type': productData instanceof FormData ? 'multipart/form-data' : 'application/json'
+            }
+        })
+    },
+
+    /**
+     * Delete a product listing
+     * @param {string} productId - Product ID
+     * @returns {Promise<Object>} - Success message
+     */
+    deleteProduct: async (productId) => {
+        return api.delete(`/products/${productId}`)
+    },
+
+    // --- ADMIN METHODS ---
+    /**
+     * Get all listings across all sellers (admin only)
+     * @returns {Promise<Object>} - { success, data: [...products] }
+     */
+    getAllListings: async () => {
+        return api.get('/products/all')
+    },
 }
 
 export default productService

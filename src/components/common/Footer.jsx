@@ -3,6 +3,7 @@
  * Main footer with links and newsletter signup
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Footer = () => {
   const [email, setEmail] = useState('')
@@ -17,21 +18,21 @@ const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   const marketplaceLinks = [
-    { label: 'Pokémon', href: '/pokemon' },
-    { label: 'Yu-Gi-Oh', href: '/yugioh' },
-    { label: 'Magic: The Gathering', href: '/magic' },
-    { label: 'Latest Arrivals', href: '/latest' },
+    { label: 'Pokémon', href: '/dddd' },
+    { label: 'Yu-Gi-Oh', href: '/' },
+    { label: 'Magic: The Gathering', href: '/' },
+    { label: 'Latest Arrivals', href: '/' },
   ]
 
   const resourceLinks = [
-    { label: 'Price Guide', href: '/price-guide' },
-    { label: 'Authentication', href: '/authentication' },
-    { label: 'Seller Tools', href: '/seller-tools' },
-    { label: 'Help Center', href: '/help' },
+    { label: 'Price Guide', href: '/' },
+    { label: 'Authentication', href: '/' },
+    { label: 'Seller Tools', href: '/' },
+    { label: 'Help Center', href: '/' },
   ]
 
   return (
-    <footer className="bg-card">
+    <footer className="bg-[#0B1121]">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -48,13 +49,10 @@ const Footer = () => {
             <h4 className="text-foreground font-medium mb-4">Marketplace</h4>
             <ul className="space-y-3">
               {marketplaceLinks.map((link) => (
-                <li key={link.href}>
-                  <a 
-                    href={link.href}
-                    className="text-muted-foreground text-sm hover:text-secondary transition-colors"
-                  >
+                <li key={link.label}>
+                  <span className="text-muted-foreground text-sm">
                     {link.label}
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -65,13 +63,10 @@ const Footer = () => {
             <h4 className="text-foreground font-medium mb-4">Resources</h4>
             <ul className="space-y-3">
               {resourceLinks.map((link) => (
-                <li key={link.href}>
-                  <a 
-                    href={link.href}
-                    className="text-muted-foreground text-sm hover:text-secondary transition-colors"
-                  >
+                <li key={link.label}>
+                  <span className="text-muted-foreground text-sm">
                     {link.label}
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -90,7 +85,7 @@ const Footer = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
                 required
-                className="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary"
+                className="flex-1 w-[110px] bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary"
               />
               <button
                 type="submit"
@@ -111,15 +106,12 @@ const Footer = () => {
               © {currentYear} Trademonk Marketplace. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <a href="/privacy" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
+              <Link to="/privacy" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Privacy Policy
-              </a>
-              <a href="/terms" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
+              </Link>
+              <Link to="/terms" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
                 Terms of Service
-              </a>
-              <a href="/cookies" className="text-muted-foreground text-sm hover:text-secondary transition-colors">
-                Cookie Policy
-              </a>
+              </Link>
             </div>
           </div>
         </div>

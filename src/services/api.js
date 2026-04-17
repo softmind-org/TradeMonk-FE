@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -38,8 +38,11 @@ api.interceptors.response.use(
                 // Unauthorized - clear token
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                // Don't redirect globally - let the specific hook/component handle it
-                // or the user can stay on the current page as a guest
+
+                // Redirect to login with expired flag, but avoid loop if already on login
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
+                }
             }
 
             // Return a formatted error object

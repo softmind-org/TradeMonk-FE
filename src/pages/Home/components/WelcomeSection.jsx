@@ -1,27 +1,36 @@
 import React from 'react';
 import { Card } from '@components/ui';
 import { Package, ShoppingBag, Heart } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import userService from '@/services/userService';
 
 const WelcomeSection = ({ user }) => {
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ['buyerStats'],
+    queryFn: async () => {
+      const response = await userService.getMyStats();
+      return response.data;
+    }
+  });
   const stats = [
     {
       id: 1,
       label: 'ACTIVE ORDERS',
-      value: '0',
+      value: isLoading ? '...' : statsData?.activeOrders || '0',
       icon: Package,
       iconColor: 'bg-blue-500/10 text-blue-500' // Using blue as in the screenshot for box icon
     },
     {
       id: 2,
       label: 'TOTAL PURCHASES',
-      value: '0',
+      value: isLoading ? '...' : statsData?.totalPurchases || '0',
       icon: ShoppingBag,
       iconColor: 'bg-green-500/10 text-green-500' // Using green for bag
     },
     {
       id: 3,
       label: 'SAVED ITEMS',
-      value: '12',
+      value: isLoading ? '...' : statsData?.savedItems || '0',
       icon: Heart,
       iconColor: 'bg-red-500/10 text-red-500' // Using red for heart
     }

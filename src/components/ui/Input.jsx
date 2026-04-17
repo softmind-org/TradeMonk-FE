@@ -17,6 +17,7 @@ const Input = ({
   className = '',
   id,
   name,
+  autoComplete,
   startIcon,
   endIcon,
   ...props
@@ -45,6 +46,7 @@ const Input = ({
           id={inputId}
           name={name}
           type={type}
+          autoComplete={autoComplete}
           value={value}
           onChange={onChange}
           placeholder={placeholder}

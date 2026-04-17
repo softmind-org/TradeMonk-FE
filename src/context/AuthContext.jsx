@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { userService } from '../services/userService'
 
 // Create context
 const AuthContext = createContext(null)
@@ -20,8 +21,22 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('accessToken')
         
         if (storedUser && token) {
+          // Optimistically load from cache
           setUser(JSON.parse(storedUser))
           setIsAuthenticated(true)
+          
+          // Fetch fresh profile in the background to renew signed URLs etc.
+          try {
+            const res = await userService.getProfile()
+            if (res.success && res.data) {
+                // Keep the token alongside fresh user data
+                localStorage.setItem('user', JSON.stringify(res.data))
+                setUser(res.data)
+            }
+          } catch (profileError) {
+             console.error('Failed to refresh profile in background:', profileError)
+             // If token expired, error interceptor will handle the logout flow automatically
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error)

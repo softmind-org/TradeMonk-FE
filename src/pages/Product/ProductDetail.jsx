@@ -2,17 +2,38 @@
  * Product Detail Page
  * Displays detailed information about a single product
  */
-import { useParams, Link } from 'react-router-dom'
-import { MainLayout } from '@layouts'
+import { useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+
 import { Button, MarketHistoryChart } from '@components/ui'
 import { useProductDetail } from '@/hooks/useProductDetail'
+import { useCart } from '@context'
 import { pokemonLogo } from '@assets'
+import { ShoppingCart, Check } from 'lucide-react'
 
 const ProductDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const [addedToCart, setAddedToCart] = useState(false)
   
   // Fetch product data from API
   const { data: product, isLoading, error } = useProductDetail(id)
+  const { addToCart, isInCart } = useCart()
+  const [isAdding, setIsAdding] = useState(false)
+  
+  // Add to cart handler
+  const handleAddToCart = async () => {
+    if (product) {
+      setIsAdding(true)
+      try {
+        await addToCart(product, 1)
+        setAddedToCart(true)
+        setTimeout(() => setAddedToCart(false), 2000)
+      } finally {
+        setIsAdding(false)
+      }
+    }
+  }
 
   /**
    * Helper to format image URLs
@@ -41,7 +62,7 @@ const ProductDetail = () => {
   // Loading State
   if (isLoading) {
     return (
-      <MainLayout>
+      <>
         <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="h-6 w-40 bg-gray-700/50 rounded animate-pulse mb-8"></div>
@@ -58,14 +79,14 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
-      </MainLayout>
+      </>
     )
   }
 
   // Error State
   if (error || !product) {
     return (
-      <MainLayout>
+      <>
         <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
           <div className="max-w-7xl mx-auto text-center py-20">
             <h1 className="text-2xl font-bold text-white mb-4">Product Not Found</h1>
@@ -75,7 +96,7 @@ const ProductDetail = () => {
             </Link>
           </div>
         </div>
-      </MainLayout>
+      </>
     )
   }
 
@@ -100,7 +121,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="bg-background min-h-screen pb-20 pt-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb / Back Link */}
@@ -118,12 +139,25 @@ const ProductDetail = () => {
             {/* Left Column - Image Gallery + Chart */}
             <div className="lg:col-span-5 space-y-6">
               {/* Image */}
-              <div className="bg-[#0B1220] rounded-3xl p-8 border border-white/5 relative aspect-[3/4] flex items-center justify-center">
-                <img 
-                  src={formatImageUrl(product.images?.[0])} 
-                  alt={product.title}
-                  className="w-full h-full object-contain drop-shadow-2xl"
-                />
+              <div className="bg-[#0B1220] rounded-3xl p-8 border border-white/5 relative aspect-[3/4] flex items-center justify-center group [perspective:1000px]">
+                <div className="relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                  {/* Front Image */}
+                  <div className="absolute inset-0 [backface-visibility:hidden]">
+                    <img 
+                      src={formatImageUrl(product.images?.[0])} 
+                      alt={product.title}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
+                  </div>
+                  {/* Back Image */}
+                  <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                    <img 
+                      src={formatImageUrl(product.backImage)} 
+                      alt={`${product.title} Back`}
+                      className="w-full h-full object-contain drop-shadow-2xl"
+                    />
+                  </div>
+                </div>
                 
                 {/* Image Dots - show if multiple images */}
                 {product.images?.length > 1 && (
@@ -184,20 +218,38 @@ const ProductDetail = () => {
                   <div>
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Price</div>
                     <div className="text-5xl md:text-6xl font-bold text-white">
-                      ${product.price?.toFixed(2)}
+                      €{product.price?.toFixed(2)}
                     </div>
                   </div>
                   
                   <div className="flex flex-col gap-3 w-full md:w-auto min-w-[200px]">
                     <Button 
-                       className="w-full bg-secondary text-black font-bold py-4 text-sm uppercase tracking-wider"
+                       onClick={handleAddToCart}
+                       disabled={isAdding}
+                       className={`w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer ${isAdding ? 'opacity-80' : ''}`}
                     >
-                      Add to Cart
+                      {isAdding ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                          Processing...
+                        </>
+                      ) : addedToCart ? (
+                        <>
+                          <Check size={18} />
+                          Added to Vault
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={18} />
+                          Add to Vault
+                        </>
+                      )}
                     </Button>
                     <Button 
-                       className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 text-sm uppercase tracking-wider border border-white/10"
+                       onClick={() => navigate('/cart')}
+                       className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 text-sm uppercase tracking-wider border border-white/10 cursor-pointer"
                     >
-                      Submit an Offer
+                      View Cart
                     </Button>
                   </div>
                 </div>
@@ -259,7 +311,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }
 
