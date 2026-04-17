@@ -6,6 +6,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { MainLayout, AuthLayout, SellerLayout, AdminLayout } from '@layouts'
 import { 
   HomePage, 
+  ComingSoon,
   NotFoundPage,
   Login,
   Register,
