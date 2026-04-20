@@ -5,15 +5,30 @@ import { useLogout } from '@/hooks/useLogout'
 import { Link } from 'react-router-dom'
 import { formatImageUrl } from '@/utils/imageUtils'
 import NotificationDropdown from '@components/common/NotificationDropdown'
+import payoutService from '@/services/payoutService'
 
 const SellerHeader = ({ onMenuClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [balance, setBalance] = useState(0)
   const dropdownRef = useRef(null)
   const { user } = useAuth()
   const { mutate: logout } = useLogout()
 
-  // Close dropdown when clicking outside
+  const fetchBalance = async () => {
+    try {
+      const response = await payoutService.getPayoutBalance()
+      if (response?.data) {
+        setBalance(response.data.availableBalance || 0)
+      }
+    } catch (error) {
+      console.error('Failed to fetch balance in header:', error)
+    }
+  }
+
+  // Close dropdown when clicking outside and fetch balance
   useEffect(() => {
+    fetchBalance()
+    
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false)
@@ -58,7 +73,7 @@ const SellerHeader = ({ onMenuClick }) => {
             {/* Balance Badge */}
             <div className="hidden md:flex items-center gap-3 bg-[#111C2E] border border-white/10 rounded-lg px-4 py-2">
                 <div className="w-6 h-6 rounded-full bg-[#D4A017]/20 flex items-center justify-center text-[#D4A017] text-xs font-bold">€</div>
-                <span className="text-white font-bold text-sm">€12,450.00</span>
+                <span className="text-white font-bold text-sm">€{balance.toFixed(2)}</span>
             </div>
 
             {/* Notifications */}

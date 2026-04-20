@@ -11,21 +11,18 @@ const Payouts = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isRequesting, setIsRequesting] = useState(false)
 
-  // Mock payout history for now until a history endpoint is added
-  const [payouts] = useState([
-    {
-      id: 'PY-992',
-      date: '2024-03-10',
-      amount: 450.00,
-      status: 'SUCCESSFUL'
-    },
-    {
-      id: 'PY-991',
-      date: '2024-03-01',
-      amount: 1200.00,
-      status: 'SUCCESSFUL'
+  const [payouts, setPayouts] = useState([])
+
+  const fetchHistory = async () => {
+    try {
+      const response = await payoutService.getPayoutHistory()
+      if (response?.data) {
+        setPayouts(response.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch payout history:', error)
     }
-  ])
+  }
 
   const fetchBalance = async () => {
     try {
@@ -46,7 +43,17 @@ const Payouts = () => {
 
   useEffect(() => {
     fetchBalance()
+    fetchHistory()
   }, [])
+
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 
   const handleRequestPayout = async () => {
     if (availableBalance <= 0) {
@@ -154,33 +161,39 @@ const Payouts = () => {
         </h2>
         
         <div className="bg-[#111C2E] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
-          {payouts.map((payout) => (
-            <div 
-              key={payout.id} 
-              className="p-5 flex items-center justify-between hover:bg-white/[0.02] transition-colors group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#16A34A]/10 flex items-center justify-center text-[#16A34A]">
-                  <DollarSign size={18} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-bold text-sm">#{payout.id}</span>
-                  </div>
-                  <span className="text-muted-foreground text-xs font-medium">{payout.date}</span>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <div className="text-white font-bold text-lg mb-1">
-                  €{payout.amount.toFixed(2)}
-                </div>
-                <span className="text-[10px] font-bold text-[#16A34A] uppercase tracking-wider bg-[#16A34A]/10 px-2 py-0.5 rounded">
-                  {payout.status}
-                </span>
-              </div>
+          {payouts.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No payout history found.
             </div>
-          ))}
+          ) : (
+            payouts.map((payout) => (
+              <div 
+                key={payout.id} 
+                className="p-5 flex items-center justify-between hover:bg-white/[0.02] transition-colors group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[#16A34A]/10 flex items-center justify-center text-[#16A34A]">
+                    <DollarSign size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-sm">#{payout.id?.slice(-8).toUpperCase()}</span>
+                    </div>
+                    <span className="text-muted-foreground text-xs font-medium">{formatDate(payout.date)}</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-white font-bold text-lg mb-1">
+                    €{payout.amount.toFixed(2)}
+                  </div>
+                  <span className="text-[10px] font-bold text-[#16A34A] uppercase tracking-wider bg-[#16A34A]/10 px-2 py-0.5 rounded">
+                    {payout.status || 'SUCCESSFUL'}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

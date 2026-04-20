@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/context'
 import { useLogout } from '@/hooks/useLogout'
+import userService from '@/services/userService'
 import { 
   User, 
   Shield, 
@@ -20,29 +22,50 @@ import { formatImageUrl } from '@/utils/imageUtils'
 const SellerProfile = () => {
   const { user } = useAuth()
   const { mutate: logout } = useLogout()
+  const [statsData, setStatsData] = useState(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await userService.getMyStats()
+        if (response?.data) {
+          setStatsData(response.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch seller profile stats:', error)
+      }
+    }
+    fetchStats()
+  }, [])
+
+  const formatStatsValue = (val) => {
+    if (!val) return '0'
+    if (val >= 1000) return `${(val / 1000).toFixed(1)}k`
+    return val.toString()
+  }
 
   const stats = [
     {
       label: 'TOTAL SALES',
-      value: '$12.4k',
-      icon: <span className="text-[#10B981]">$</span>,
+      value: `€${formatStatsValue(statsData?.totalSalesNet)}` || '€0',
+      icon: <span className="text-[#10B981]">€</span>,
       iconBg: 'bg-[#10B9811A]'
     },
     {
       label: 'ACTIVE LISTINGS',
-      value: '42',
+      value: statsData?.activeListings?.toString() || '0',
       icon: <Package className="w-5 h-5 text-[#3B82F6]" />,
       iconBg: 'bg-[#3B82F61A]'
     },
     {
       label: 'ORDERS',
-      value: '156',
+      value: (statsData?.totalPurchases || 0).toString(), // Assuming this represents history
       icon: <TrendingUp className="w-5 h-5 text-[#A855F7]" />,
       iconBg: 'bg-[#A855F71A]'
     },
     {
       label: 'FOLLOWERS',
-      value: '892',
+      value: statsData?.followers?.toString() || '0',
       icon: <Users className="w-5 h-5 text-[#F59E0B]" />,
       iconBg: 'bg-[#F59E0B1A]'
     }

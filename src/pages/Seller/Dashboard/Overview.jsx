@@ -10,30 +10,44 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import orderService from '@/services/orderService'
+import userService from '@/services/userService'
 import toast from 'react-hot-toast'
 import { pokemonLogo } from '@assets'
 
 const Overview = () => {
   const navigate = useNavigate()
   const [pendingOrders, setPendingOrders] = useState([])
+  const [statsData, setStatsData] = useState(null)
+  const [activityData, setActivityData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchPendingOrders = async () => {
+  const fetchDashboardData = async () => {
     try {
       setIsLoading(true)
-      const response = await orderService.getSellerOrders('confirmed')
-      if (response?.data) {
-        setPendingOrders(response.data.slice(0, 5)) // Show top 5
+      // 1. Fetch pending dispatch orders (Used for the list below)
+      const ordersResponse = await orderService.getSellerOrders('confirmed')
+      if (ordersResponse?.data) {
+        setPendingOrders(ordersResponse.data.slice(0, 5))
+      }
+
+      // 2. Fetch general stats and activity
+      const statsResponse = await userService.getMyStats()
+      console.log('Dashboard Stats Response:', statsResponse)
+      if (statsResponse?.data) {
+        setStatsData(statsResponse.data)
+        setActivityData(statsResponse.data.recentActivity || [])
       }
     } catch (error) {
-      console.error('Failed to fetch pending dispatch orders:', error)
+      console.error('Failed to fetch dashboard data:', error)
+      const errorMsg = error.response?.data?.message || 'Could not load dashboard statistics'
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchPendingOrders()
+    fetchDashboardData()
   }, [])
 
   const handleUpdateStatus = async (orderId, newStatus) => {
@@ -41,7 +55,7 @@ const Overview = () => {
       const response = await orderService.updateOrderStatus(orderId, { status: newStatus })
       if (response.success) {
         toast.success(`Order marked as ${newStatus}`)
-        fetchPendingOrders() // Refresh the list
+        fetchDashboardData() // Refresh everything
       }
     } catch (error) {
       console.error('Error updating order:', error)
@@ -60,19 +74,49 @@ const Overview = () => {
     return `${serverBase}${cleanPath}`
   }
 
-  // Stats are mocked below until a real stats endpoint exists
   const stats = [
-    { title: 'Total Sales', value: '$12,450.00', icon: DollarSign, change: '+12.5%', trend: 'up' },
-    { title: 'Active Listings', value: '8', icon: Package, change: '+2', trend: 'up' },
-    { title: 'Pending Orders', value: pendingOrders.length.toString(), icon: ShoppingBag, change: 'Requires Action', trend: 'neutral' },
-    { title: 'Store Rating', value: '4.9/5', icon: Activity, change: 'Top Rated', trend: 'up' },
+    { 
+      title: 'Total Sales', 
+      value: `€${statsData?.totalSalesNet?.toFixed(2) || '0.00'}`, 
+      icon: DollarSign, 
+      change: 'Lifetime Net', 
+      trend: (statsData?.totalSalesNet > 0 ? 'up' : 'neutral') 
+    },
+    { 
+      title: 'Active Listings', 
+      value: statsData?.activeListings?.toString() || '0', 
+      icon: Package, 
+      change: 'In Store', 
+      trend: (statsData?.activeListings > 0 ? 'up' : 'neutral') 
+    },
+    { 
+      title: 'Pending Orders', 
+      value: pendingOrders.length.toString(), 
+      icon: ShoppingBag, 
+      change: 'Requires Action', 
+      trend: (pendingOrders.length > 0 ? 'down' : 'neutral') 
+    },
+    { 
+      title: 'Store Rating', 
+      value: `${statsData?.storeRating || '5.0'}/5`, 
+      icon: Activity, 
+      change: 'Top Rated', 
+      trend: 'up' 
+    },
   ]
 
-  const recentActivity = [
-    { id: 1, action: 'Umbreon VMAX Sold', time: '2h ago', type: 'sale' },
-    { id: 2, action: 'New Listing: Black Lotus', time: '5h ago', type: 'listing' },
-    { id: 3, action: '$450.00 Sent to Bank', time: '1d ago', type: 'payout' },
-  ]
+  const formatActivityTime = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now - date
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    return `${diffDays}d ago`
+  }
 
   return (
     <div className="space-y-8">
@@ -159,10 +203,13 @@ const Overview = () => {
             <div className="space-y-4">
                 <h2 className="text-lg font-bold text-white mb-2">Recent Activity</h2>
                 <div className="bg-[#111C2E] border border-white/5 rounded-2xl p-6 space-y-6">
-                    {recentActivity.map((activity, i) => (
+                    {activityData.length === 0 ? (
+                      <div className="text-center py-4 text-xs text-muted-foreground">No recent activity</div>
+                    ) : (
+                      activityData.map((activity, i) => (
                         <div key={activity.id} className="flex gap-4 relative">
                             {/* Connector Line */}
-                            {i !== recentActivity.length - 1 && (
+                            {i !== activityData.length - 1 && (
                                 <div className="absolute top-8 left-[5px] w-0.5 h-full bg-white/5"></div>
                             )}
                             
@@ -173,10 +220,11 @@ const Overview = () => {
                             
                             <div>
                                 <p className="text-sm font-bold text-white">{activity.action}</p>
-                                <p className="text-xs text-muted-foreground">{activity.time}</p>
+                                <p className="text-xs text-muted-foreground">{formatActivityTime(activity.time)}</p>
                             </div>
                         </div>
-                    ))}
+                      ))
+                    )}
                 </div>
             </div>
         </div>

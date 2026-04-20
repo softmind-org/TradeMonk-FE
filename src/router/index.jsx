@@ -228,7 +228,7 @@ export const router = createBrowserRouter([
   // ─── 404 Catch-All ───
   {
     path: '*',
-    element: <ComingSoon />,
+    element: <NotFoundPage />,
   },
 ])
 

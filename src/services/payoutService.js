@@ -17,6 +17,14 @@ export const payoutService = {
      */
     requestPayout: async () => {
         return api.post('/payouts/request');
+    },
+
+    /**
+     * Get seller's payout history (processed transfers)
+     * @returns {Promise<Object>} List of payout history items
+     */
+    getPayoutHistory: async () => {
+        return api.get('/payouts/history');
     }
 };
 
