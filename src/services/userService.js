@@ -32,6 +32,16 @@ export const userService = {
         return api.patch(`/users/${userId}/status`, { status })
     },
 
+    /**
+     * Update user details (admin only)
+     * @param {string} userId - User ID
+     * @param {Object} data - { fullName, email }
+     * @returns {Promise<Object>} - { success, message, data }
+     */
+    updateUser: async (userId, data) => {
+        return api.put(`/users/${userId}`, data)
+    },
+
     // --- SELLER ADMIN METHODS ---
     /**
      * Get all sellers with stats (admin only)

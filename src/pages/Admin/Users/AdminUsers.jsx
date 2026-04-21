@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import TableLayout from '@layouts/TableLayout'
 import { ADMIN_USERS_COLUMNS } from './adminUsersColumns'
 import userService from '@/services/userService'
+import { useModal } from '@/context/modal'
+import EditUserModal from '@/components/Modals/EditUserModal'
 
 /* ── Admin Users Page ── */
 const AdminUsers = () => {
   const navigate = useNavigate()
+  const { openModal, closeModal } = useModal()
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -35,6 +38,32 @@ const AdminUsers = () => {
 
   const handleView = (user) => {
     navigate(`/admin/users/${user._id}`)
+  }
+
+  const handleEdit = (user) => {
+    openModal(
+      <EditUserModal
+        user={user}
+        onClose={closeModal}
+        onSave={(data) => handleUpdateUser(user._id, data)}
+      />
+    )
+  }
+
+  const handleUpdateUser = async (userId, data) => {
+    try {
+      const response = await userService.updateUser(userId, data)
+      if (response?.success) {
+        // Option 1: Update local state for instant feedback
+        setUsers((prev) =>
+          prev.map((u) => (u._id === userId ? { ...u, ...response.data } : u))
+        )
+        closeModal()
+      }
+    } catch (err) {
+      console.error('Update failed:', err)
+      throw err // Let the modal handle the error display
+    }
   }
 
   const handleToggleStatus = async (user) => {
@@ -66,9 +95,10 @@ const AdminUsers = () => {
     () =>
       ADMIN_USERS_COLUMNS({
         onView: handleView,
-        onToggleStatus: handleToggleStatus
+        onToggleStatus: handleToggleStatus, // Pass existing status toggle
+        onEdit: handleEdit
       }),
-    [handleView]
+    [handleView, handleToggleStatus]
   )
 
   return (

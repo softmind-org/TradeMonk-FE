@@ -1,4 +1,4 @@
-import { Eye, UserX, UserCheck } from 'lucide-react'
+import { Eye, UserX, UserCheck, Edit2 } from 'lucide-react'
 
 const get = (row, path) => path.split('.').reduce((o, k) => o?.[k], row)
 
@@ -40,7 +40,7 @@ const ActionBtn = ({ icon: Icon, onClick, className = '' }) => (
 )
 
 /* ── Column Definitions ── */
-export const ADMIN_USERS_COLUMNS = ({ onView, onToggleStatus }) => [
+export const ADMIN_USERS_COLUMNS = ({ onView, onToggleStatus, onEdit }) => [
   {
     key: 'userEntity',
     label: 'User Entity',
@@ -110,6 +110,11 @@ export const ADMIN_USERS_COLUMNS = ({ onView, onToggleStatus }) => [
             icon={Eye}
             onClick={() => onView?.(row)}
             className="hover:!text-[#4ADE80] hover:!bg-[#4ADE80]/10"
+          />
+          <ActionBtn
+            icon={Edit2}
+            onClick={() => onEdit?.(row)}
+            className="hover:!text-blue-400 hover:!bg-blue-400/10"
           />
           {row.role !== 'admin' && (
             <ActionBtn
