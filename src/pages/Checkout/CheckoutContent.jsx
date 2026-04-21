@@ -140,6 +140,8 @@ const CheckoutContent = () => {
             
             // 4. Final Seller Net (Item Cost - TradeMonk Fee - Stripe Fee)
             // Shipping is no longer sent to the seller as the platform (Admin) pays for the label.
+            const sellerPlatformFeeNet = parseFloat((sellerPlatformFee / 1.21).toFixed(2))
+            const sellerPlatformFeeVat = parseFloat((sellerPlatformFee - sellerPlatformFeeNet).toFixed(2))
             const sellerNet = parseFloat((sellerItemsTotal - sellerPlatformFee - sellerStripeFee).toFixed(2))
 
             const orderResponse = await orderService.createOrder({
@@ -157,6 +159,8 @@ const CheckoutContent = () => {
                 shippingFee: sellerShipping,
                 stripeFee: sellerStripeFee,
                 platformFee: sellerPlatformFee,
+                platformFeeNet: sellerPlatformFeeNet,
+                platformFeeVat: sellerPlatformFeeVat,
                 sellerNet: sellerNet
               },
               shippingAddress: {
