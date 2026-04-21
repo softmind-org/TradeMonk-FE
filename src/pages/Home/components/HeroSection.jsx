@@ -84,7 +84,7 @@ const HeroSection = ({ stats }) => {
           {ecosystems.map((ecosystem) => (
             <Link 
             key={ecosystem.name}
-            to={`/${ecosystem.name.toLowerCase().replace(/[:\s]/g, '-')}`}
+            // to={`/${ecosystem.name.toLowerCase().replace(/[:\s]/g, '-')}`}
             className="bg-card border border-border rounded-xl px-6 py-4 flex items-center gap-3 hover:border-secondary transition-colors min-w-40"
             >
               <img 

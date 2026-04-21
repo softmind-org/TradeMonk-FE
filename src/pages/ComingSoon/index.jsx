@@ -1,5 +1,6 @@
 import React from 'react';
-import { Mail, ArrowRight, ShieldCheck, Sparkles, Watch } from 'lucide-react';
+import { Mail, ArrowRight, ShieldCheck, Sparkles, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ComingSoon = () => {
   return (
@@ -32,7 +33,7 @@ const ComingSoon = () => {
         </p>
 
         {/* Notify Form */}
-        <div className="w-full max-w-md bg-[#111C2E]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex items-center shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative mt-2">
+        <div className="w-full max-w-md bg-[#111C2E]/80 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex items-center shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative mt-2 mb-8">
           <div className="pl-4">
             <Mail size={20} className="text-[#D4A017]" />
           </div>
@@ -45,6 +46,15 @@ const ComingSoon = () => {
             Notify Me <ArrowRight size={16} />
           </button>
         </div>
+
+        {/* Home Link */}
+        <Link 
+          to="/" 
+          className="group flex items-center gap-2 text-white/40 hover:text-[#D4A017] transition-all duration-300 font-bold text-xs uppercase tracking-widest bg-white/5 px-6 py-3 rounded-full border border-white/5 hover:border-[#D4A017]/30"
+        >
+          <Home size={14} className="group-hover:scale-110 transition-transform" />
+          Back to Homepage
+        </Link>
       </div>
     </div>
   );
