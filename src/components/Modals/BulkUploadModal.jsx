@@ -152,6 +152,10 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle size={12} className="mt-0.5 text-[#D4A017]" />
+                    <span className="text-white font-black">BOTH FRONT & BACK IMAGES COMPULSORY</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle size={12} className="mt-0.5 text-[#D4A017]" />
                     <span>Exact card condition names</span>
                   </li>
                 </ul>
