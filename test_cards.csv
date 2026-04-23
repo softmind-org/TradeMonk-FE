@@ -1,7 +1,7 @@
-title,collectionName,gameSystem,price,condition,quantity,setNumber,rarity,description,imageUrl,imageFilename
-Pikachu VMAX,Shining Fates,Pokémon,150.00,MINT,2,POK-001,Secret Rare,Perfect condition,https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_45.png,
-Charizard GX,Hidden Fates,Pokémon,450.00,NM,1,HIF-SVG,Shiny Rare,Slight wear,https://assets.pokemon.com/assets/cms2/img/cards/web/SM115/SM115_EN_SV49.png,
-Mewtwo EX,Evolutions,Pokémon,85.50,LP,1,EVO-012,Ultra Rare,,https://assets.pokemon.com/assets/cms2/img/cards/web/XY12/XY12_EN_52.png,
-Dark Magician,Legendary Collection,Yu-Gi-Oh!,299.99,MINT,1,LC01-EN001,Ultra Rare,,https://images.ygoprodeck.com/images/cards/46986414.jpg,
-Black Lotus,Alpha,Magic,25000.00,HP,1,,Rare,Heavy play wear,https://cards.scryfall.io/large/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg,
-Cristiano Ronaldo,Panini 2022,Sports,500.00,MINT,1,,Rookie,PSA 10 Potential,https://i.ebayimg.com/images/g/w2YAAOSw~-ZjwS-R/s-l1600.jpg,
+title,collectionName,gameSystem,price,condition,quantity,setNumber,rarity,description,imageUrl,backImageUrl,imageFilename,backImageFilename
+Pikachu VMAX,Shining Fates,Pokémon,150.00,MINT,2,POK-001,Secret Rare,Perfect condition,https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_45.png,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,
+Charizard GX,Hidden Fates,Pokémon,450.00,NM,1,HIF-SVG,Shiny Rare,Slight wear,https://assets.pokemon.com/assets/cms2/img/cards/web/SM115/SM115_EN_SV49.png,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,
+Mewtwo EX,Evolutions,Pokémon,85.50,LP,1,EVO-012,Ultra Rare,,https://assets.pokemon.com/assets/cms2/img/cards/web/XY12/XY12_EN_52.png,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,
+Dark Magician,Legendary Collection,Yu-Gi-Oh!,299.99,MINT,1,LC01-EN001,Ultra Rare,,https://images.ygoprodeck.com/images/cards/46986414.jpg,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,
+Black Lotus,Alpha,Magic,25000.00,HP,1,,Rare,Heavy play wear,https://cards.scryfall.io/large/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,
+Cristiano Ronaldo,Panini 2022,Sports,500.00,MINT,1,,Rookie,PSA 10 Potential,https://i.ebayimg.com/images/g/w2YAAOSw~-ZjwS-R/s-l1600.jpg,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,

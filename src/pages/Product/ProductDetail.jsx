@@ -18,6 +18,9 @@ const ProductDetail = () => {
   
   // Fetch product data from API
   const { data: product, isLoading, error } = useProductDetail(id)
+  
+  if (product) console.log('DEBUG Product Detail:', { title: product.title, front: product.images?.[0], back: product.backImage })
+  
   const { addToCart, isInCart } = useCart()
   const [isAdding, setIsAdding] = useState(false)
   

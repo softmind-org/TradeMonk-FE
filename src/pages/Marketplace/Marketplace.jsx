@@ -179,7 +179,8 @@ const Marketplace = () => {
       sortBy,
       resultsCount: cards.length,
       isLoading,
-      data: cards
+      data: cards,
+      backImageCheck: cards.map(c => c.backImage) // Check back images
     })
   }, [filters, sortBy, cards, isLoading])
 

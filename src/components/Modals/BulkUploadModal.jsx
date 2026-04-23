@@ -46,10 +46,9 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
   }
 
   const downloadTemplate = () => {
-    const headers = 'title,collectionName,gameSystem,price,condition,quantity,setNumber,rarity,description,imageUrl,imageFilename\n'
-    const example1 = 'Pikachu VMAX,Shining Fates,Pokémon,150.00,MINT,1,POK-001,Secret Rare,Perfect condition,https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_45.png,\n'
-    const example2 = 'Charizard GX,Hidden Fates,Pokémon,450.00,NM,1,HIF-SVG,Shiny Rare,Slight wear,https://assets.pokemon.com/assets/cms2/img/cards/web/SM115/SM115_EN_SV49.png,\n'
-    const blob = new Blob([headers + example1 + example2], { type: 'text/csv' })
+    const headers = 'title,collectionName,gameSystem,price,condition,quantity,setNumber,rarity,description,imageUrl,backImageUrl,imageFilename,backImageFilename\n'
+    const example1 = 'Pikachu VMAX,Shining Fates,Pokémon,150.00,MINT,1,POK-001,Secret Rare,Perfect condition,https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_45.png,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,\n'
+    const blob = new Blob([headers + example1], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
