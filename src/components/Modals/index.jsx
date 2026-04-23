@@ -36,7 +36,7 @@ const Modal = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Scroll inside if content is tall */}
-          <div className="max-h-[80vh] overflow-y-auto lg:p-9 md:p-2">
+          <div className="max-h-[80vh] overflow-y-auto lg:p-1 md:p-2">
             {content}
           </div>
         </div>

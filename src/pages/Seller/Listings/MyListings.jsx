@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import TableLayout from '@layouts/TableLayout'
 import { MY_LISTINGS_COLUMNS } from './myListingsColumns'
 import { useModal } from '../../../context/modal'
 import DeleteConfirmation from '@components/Modals/DeleteConfirmation'
+import BulkUploadModal from '@components/Modals/BulkUploadModal'
 import { useDeleteListing } from '../../../hooks/useDeleteListing'
 import { useSellerListings } from '../../../hooks/useSellerListings'
 
@@ -16,7 +17,7 @@ const MyListings = () => {
   const deleteMutation = useDeleteListing()
 
   // Fetch live seller listings
-  const { data, isLoading, error } = useSellerListings({
+  const { data, isLoading, error, refetch } = useSellerListings({
     page: currentPage,
     limit: 10
   })
@@ -51,6 +52,18 @@ const MyListings = () => {
     )
   }
 
+  const handleBulkUpload = () => {
+    openModal(
+      <BulkUploadModal
+        onClose={closeModal}
+        onUploadSuccess={() => {
+          refetch()
+        }}
+      />,
+      500
+    )
+  }
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
   }
@@ -70,13 +83,22 @@ const MyListings = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Listings</h1>
-        <button
-          onClick={() => navigate('/seller/listings/add')}
-          className="bg-[#D4A017] hover:bg-[#D4A017]/90 text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
-        >
-          <Plus size={16} />
-          Add Listing
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleBulkUpload}
+            className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors border border-white/5"
+          >
+            <Upload size={16} />
+            Bulk Upload
+          </button>
+          <button
+            onClick={() => navigate('/seller/listings/add')}
+            className="bg-[#D4A017] hover:bg-[#D4A017]/90 text-black font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} />
+            Add Listing
+          </button>
+        </div>
       </div>
 
       {/* Table */}

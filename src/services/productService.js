@@ -99,13 +99,17 @@ export const productService = {
         return api.delete(`/products/${productId}`)
     },
 
-    // --- ADMIN METHODS ---
     /**
-     * Get all listings across all sellers (admin only)
-     * @returns {Promise<Object>} - { success, data: [...products] }
+     * Bulk upload products via CSV
+     * @param {FormData} formData - CSV file
+     * @returns {Promise<Object>} - Upload results
      */
-    getAllListings: async () => {
-        return api.get('/products/all')
+    bulkUploadProducts: async (formData) => {
+        return api.post('/products/bulk-upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
     },
 }
 
