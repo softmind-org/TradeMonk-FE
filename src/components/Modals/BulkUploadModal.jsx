@@ -146,7 +146,7 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
                 <ul className="text-white/40 text-[9px] space-y-1">
                   <li>• Max 200 items per batch</li>
                   <li>• Exact Categories (Pokémon, etc.)</li>
-                  <li className="text-secondary font-bold">• BOTH IMAGES COMPULSORY</li>
+                  <li className="text-secondary font-bold">• Images Optional (Stock provided)</li>
                 </ul>
               </div>
             </div>

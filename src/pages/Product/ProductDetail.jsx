@@ -43,7 +43,19 @@ const ProductDetail = () => {
    * Prepends the backend server origin to the stored relative path
    */
   const formatImageUrl = (path) => {
-    if (!path || path === '') return pokemonLogo;
+    // Known broken URL from previous uploads - swap with stable mirror
+    const stablePokemonBack = 'https://upload.wikimedia.org/wikipedia/en/3/3b/Pokemon_Trading_Card_Game_cardback.jpg';
+    
+    if (path && (path.includes('assets.pokemon.com/assets/cms2/img/cards/web/back.png') || path.includes('limitlesstcg.s3'))) {
+      return stablePokemonBack;
+    }
+
+    if (!path || path === '') {
+      const system = product?.gameSystem;
+      if (system === 'Pokémon') return stablePokemonBack;
+      if (system?.includes('Yu-Gi-Oh')) return 'https://images.ygoprodeck.com/images/cards/back_high.jpg';
+      return pokemonLogo;
+    }
     
     // If it's already a full URL, return it
     if (path.startsWith('http')) return path;
