@@ -71,8 +71,12 @@ export const PRODUCT_FORM_FIELDS = {
                 { label: 'Uncommon', value: 'UNCOMMON' },
                 { label: 'Rare', value: 'RARE' },
                 { label: 'Holo Rare', value: 'HOLO RARE' },
+                { label: 'Reverse Holo', value: 'REVERSE HOLO' },
                 { label: 'Ultra Rare', value: 'ULTRA RARE' },
-                { label: 'Secret Rare', value: 'SECRET RARE' }
+                { label: 'Secret Rare', value: 'SECRET RARE' },
+                { label: 'Illustration Rare', value: 'ILLUSTRATION RARE' },
+                { label: 'Special Illustration Rare', value: 'SPECIAL ILLUSTRATION RARE' },
+                { label: 'Hyper Rare', value: 'HYPER RARE' }
             ]
         },
         {

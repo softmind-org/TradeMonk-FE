@@ -99,20 +99,21 @@ const AddListing = () => {
     enableReinitialize: true,
     validationSchema: productValidationSchema,
     onSubmit: async (values) => {
-      // Validate Images for new listings
-      if (!isEditMode) {
+      // Validate Images conditionally for high-value items
+      const priceVal = parseFloat(values.price);
+      if (!isEditMode && priceVal >= 10) {
         let hasImageError = false;
         if (!frontFile) {
-          setImageErrors(prev => ({ ...prev, front: 'Front image is required' }));
+          setImageErrors(prev => ({ ...prev, front: 'Required for cards €10+' }));
           hasImageError = true;
         }
         if (!backFile) {
-          setImageErrors(prev => ({ ...prev, back: 'Back image is required' }));
+          setImageErrors(prev => ({ ...prev, back: 'Required for cards €10+' }));
           hasImageError = true;
         }
         
         if (hasImageError) {
-          toast.error('Please upload both front and back images to continue.');
+          toast.error('Cards priced €10 or above require both front and back custom photos.');
           return;
         }
       }

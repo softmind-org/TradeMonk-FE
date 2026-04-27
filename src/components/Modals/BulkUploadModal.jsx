@@ -24,6 +24,7 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
       // Parse first 5 rows for preview (Checklist 3.4)
       Papa.parse(selectedFile, {
         header: true,
+        delimiter: ';',
         preview: 5,
         skipEmptyLines: true,
         complete: (results) => {
@@ -75,8 +76,8 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
   }
 
   const downloadTemplate = () => {
-    const headers = 'title,collectionName,gameSystem,price,condition,quantity,setNumber,rarity,description,imageUrl,backImageUrl,imageFilename,backImageFilename\n'
-    const example1 = 'Pikachu VMAX,Shining Fates,Pokémon,150.00,MINT,1,POK-001,Secret Rare,Perfect condition,https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_45.png,https://assets.pokemon.com/assets/cms2/img/cards/web/back.png,,\n'
+    const headers = 'quantity;title;collectionName;setNumber;condition;language;gameSystem;finishType;price;Description;rarity;imageUrl;backImageUrl\n'
+    const example1 = '1;Pikachu VMAX;Shining Fates;POK-001;MINT;English;Pokémon;Foil;150.00;Perfect condition;Secret Rare;; \n'
     const blob = new Blob([headers + example1], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -144,9 +145,11 @@ const BulkUploadModal = ({ onClose, onUploadSuccess }) => {
                   <span className="text-[10px] font-black uppercase tracking-widest">Rules</span>
                 </div>
                 <ul className="text-white/40 text-[9px] space-y-1">
+                  <li className="text-secondary font-bold">• Native TCG Powertools Format</li>
+                  <li>• Semicolon (;) separated data</li>
                   <li>• Max 200 items per batch</li>
                   <li>• Exact Categories (Pokémon, etc.)</li>
-                  <li className="text-secondary font-bold">• Images Optional (Stock provided)</li>
+                  <li>• Images Optional (Stock provided)</li>
                 </ul>
               </div>
             </div>
