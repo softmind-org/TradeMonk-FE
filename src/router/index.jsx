@@ -40,7 +40,8 @@ import {
   PrivacyPage,
   Profile,
   BuyerProfile,
-  SellerProfile
+  SellerProfile,
+  Messages
 } from '@pages'
 import ProtectedRoute from '@components/common/ProtectedRoute'
 import SellerOverview from '@pages/Seller/Dashboard/Overview'
@@ -112,6 +113,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: '/messages',
+        element: (
+          <ProtectedRoute allowedRoles={['buyer', 'seller']}>
+            <Messages />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 
@@ -169,6 +178,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <StoreSettings />,
+      },
+      {
+        path: 'messages',
+        element: <Messages />,
       },
     ],
   },

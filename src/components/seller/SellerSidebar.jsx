@@ -5,7 +5,8 @@ import {
   ShoppingBag, 
   BarChart3, 
   Settings, 
-  LogOut 
+  LogOut,
+  MessageSquare
 } from 'lucide-react'
 // import { useAuth } from '@context' // No longer needed for logout
 import { useLogout } from '@/hooks/useLogout' // Import the hook
@@ -20,6 +21,7 @@ const SellerSidebar = ({ isOpen, onClose }) => {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/seller/dashboard' },
     { name: 'My Listings', icon: Package, path: '/seller/listings' },
     { name: 'Sales Orders', icon: ShoppingBag, path: '/seller/orders' },
+    { name: 'Messages', icon: MessageSquare, path: '/seller/messages' },
     { name: 'Payouts', icon: BarChart3, path: '/seller/payouts' },
     { name: 'Store Settings', icon: Settings, path: '/seller/settings' },
   ]

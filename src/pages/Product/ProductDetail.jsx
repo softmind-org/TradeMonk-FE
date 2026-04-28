@@ -9,7 +9,7 @@ import { Button, MarketHistoryChart } from '@components/ui'
 import { useProductDetail } from '@/hooks/useProductDetail'
 import { useCart } from '@context'
 import { pokemonLogo } from '@assets'
-import { ShoppingCart, Check } from 'lucide-react'
+import { ShoppingCart, Check, MessageCircle } from 'lucide-react'
 
 const ProductDetail = () => {
   const { id } = useParams()
@@ -36,6 +36,18 @@ const ProductDetail = () => {
         setIsAdding(false)
       }
     }
+  }
+
+  // Handle messaging the seller
+  const handleMessageSeller = () => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    // In this model, the seller ID is stored in seller.userId
+    const targetSellerId = product.seller?.userId?._id || product.seller?.userId || product.seller?._id;
+    navigate(`/messages?product=${product._id}&seller=${targetSellerId}`)
   }
 
   /**
@@ -240,7 +252,7 @@ const ProductDetail = () => {
                   <div className="flex flex-col gap-3 w-full md:w-auto min-w-[200px]">
                     <Button 
                        onClick={handleAddToCart}
-                       disabled={isAdding}
+                       disabled={isAdding || addedToCart}
                        className={`w-full bg-secondary hover:bg-secondary/90 text-black font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer ${isAdding ? 'opacity-80' : ''}`}
                     >
                       {isAdding ? (
@@ -260,6 +272,18 @@ const ProductDetail = () => {
                         </>
                       )}
                     </Button>
+
+                    {/* Hide Message button if viewer is the seller */}
+                    {product?.seller?._id !== JSON.parse(localStorage.getItem('user') || 'null')?._id && (
+                      <Button
+                        onClick={handleMessageSeller}
+                        className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 text-sm uppercase tracking-wide flex items-center justify-center gap-2 border border-white/10 transition-all cursor-pointer"
+                      >
+                        <MessageCircle size={18} />
+                        Message Seller
+                      </Button>
+                    )}
+
                     <Button 
                        onClick={() => navigate('/cart')}
                        className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 text-sm uppercase tracking-wider border border-white/10 cursor-pointer"

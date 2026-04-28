@@ -13,7 +13,8 @@ import {
   Heart, 
   LogOut,
   Store,
-  Shield
+  Shield,
+  MessageSquare
 } from 'lucide-react'
 import { formatImageUrl } from '@/utils/imageUtils'
 import NotificationDropdown from '@components/common/NotificationDropdown'
@@ -183,6 +184,10 @@ const Header = () => {
                       <Package size={16} />
                       My Orders
                     </Link>
+                    <Link to="/messages" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-5 py-2.5 text-[#94A3B8] hover:text-white hover:bg-white/5 text-[12px] font-bold transition-colors">
+                      <MessageSquare size={16} />
+                      Messages
+                    </Link>
                     <Link 
                       to={user?.role === 'seller' ? '/seller/profile' : '/profile'} 
                       onClick={() => setIsDropdownOpen(false)}
@@ -287,6 +292,9 @@ const Header = () => {
                       </div>
                       <span className="text-foreground text-sm font-medium">{user?.fullName || user?.email}</span>
                   </div>
+                  <Link to="/messages" onClick={() => setIsMobileMenuOpen(false)} className="text-foreground text-sm font-medium flex items-center gap-2 mb-3 hover:text-secondary">
+                    <MessageSquare size={14} /> Messages
+                  </Link>
                   <button onClick={handleLogout} className="text-[#FF5D5D] text-sm font-medium flex items-center gap-2">
                     <LogOut size={14} /> Sign Out
                   </button>
