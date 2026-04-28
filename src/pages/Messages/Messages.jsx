@@ -105,7 +105,7 @@ const Messages = () => {
                 
                 {/* Left Panel (Conversation List) */}
                 <div className={`w-full md:w-[350px] flex-shrink-0 flex flex-col border-r border-white/5 bg-[#0F172A] ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
-                    <div className="p-4 border-b border-white/5 bg-[#1E293B]/50 flex items-center justify-between flex-shrink-0">
+                    <div className="p-7 mb-5 border-b border-white/5 bg-[#1E293B]/50 flex items-center justify-between flex-shrink-0">
                         <h2 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
                             <MessageSquare className="text-[#D4A017]" size={14} />
                             Inbox
