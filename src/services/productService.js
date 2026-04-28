@@ -111,6 +111,17 @@ export const productService = {
             }
         })
     },
+
+    /**
+     * Get ALL products (Admin use only - no seller filter)
+     * @param {Object} params - Optional query parameters
+     * @returns {Promise<Object>} - Full product list
+     */
+    getAllListings: async (params = {}) => {
+        const queryParams = new URLSearchParams(params).toString()
+        const endpoint = `/products${queryParams ? `?${queryParams}` : ''}`
+        return api.get(endpoint)
+    },
 }
 
 export default productService
