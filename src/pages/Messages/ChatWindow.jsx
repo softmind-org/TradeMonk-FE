@@ -138,7 +138,8 @@ const ChatWindow = ({
                 {messages.map((msg, idx) => {
                     const isMine = msg.sender?._id === currentUser._id || msg.sender === currentUser._id
                     const msgFile = msg.image;
-                    const isImg = msgFile && (msgFile.match(/\.(jpeg|jpg|gif|png|webp|jfif|bmp)$/i) || msgFile.toLowerCase().includes('image'));
+                    // Fix: Only check for image extensions, NOT the word 'image' in path
+                    const isImg = msgFile && msgFile.match(/\.(jpeg|jpg|gif|png|webp|jfif|bmp)$/i);
                     const fileName = getFileName(msgFile);
 
                     return (
