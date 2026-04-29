@@ -14,7 +14,15 @@ const useChat = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    const { onNewMessage, onMessagesRead, isConnected } = useSocket()
+    const { 
+        onNewMessage, 
+        onMessagesRead, 
+        isConnected, 
+        onTyping, 
+        onStopTyping, 
+        emitTyping, 
+        emitStopTyping 
+    } = useSocket()
 
     /**
      * Fetch all conversations
@@ -190,7 +198,11 @@ const useChat = () => {
         startConversation,
         fetchMessages,
         sendMessage,
-        markAsRead
+        markAsRead,
+        onTyping,
+        onStopTyping,
+        emitTyping,
+        emitStopTyping
     }
 }
 
