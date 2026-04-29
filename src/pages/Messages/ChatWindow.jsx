@@ -102,9 +102,11 @@ const ChatWindow = ({
         }
     }
 
-    const getFileName = (path) => {
-        if (!path) return 'File Attachment';
-        const parts = path.split('/');
+    const getFileName = (filePath) => {
+        if (!filePath) return 'File Attachment';
+        // Strip query params (S3 presigned URLs have ?X-Amz-...)
+        const cleanPath = filePath.split('?')[0];
+        const parts = cleanPath.split('/');
         const rawName = parts[parts.length - 1];
         const nameParts = rawName.split('-');
         if (nameParts.length > 2) return nameParts.slice(2).join('-');
@@ -138,8 +140,9 @@ const ChatWindow = ({
                 {messages.map((msg, idx) => {
                     const isMine = msg.sender?._id === currentUser._id || msg.sender === currentUser._id
                     const msgFile = msg.image;
-                    // Fix: Only check for image extensions, NOT the word 'image' in path
-                    const isImg = msgFile && msgFile.match(/\.(jpeg|jpg|gif|png|webp|jfif|bmp)$/i);
+                    // Strip query params before checking extension (S3 presigned URLs)
+                    const cleanUrl = msgFile ? msgFile.split('?')[0] : '';
+                    const isImg = msgFile && cleanUrl.match(/\.(jpeg|jpg|gif|png|webp|jfif|bmp)$/i);
                     const fileName = getFileName(msgFile);
 
                     return (
